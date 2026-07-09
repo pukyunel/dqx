@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="宝珠管理帳">
+<meta name="theme-color" content="#141733">
+<meta name="mobile-web-app-capable" content="yes">
+<title>宝珠管理帳 - DQX Houju Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#141733;
+    --bg-alt:#1d2148;
+    --panel:#232a5c;
+    --parchment:#f3ead4;
+    --parchment-dark:#e6d9b8;
+    --ink:#2b2418;
+    --ink-soft:#5c5237;
+    --gold:#d1a53d;
+    --gold-bright:#f0c96a;
+    --cream:#efe6d0;
+    --fire:#d8492d;
+    --water:#2e7dc1;
+    --wind:#3f9e6b;
+    --light:#e0b93f;
+    --dark:#8459c9;
+    --danger:#c1443a;
+    --radius:10px;
+    --shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at top, #232a5c 0%, #141733 55%, #0d0f24 100%);
+    color:var(--cream);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    min-height:100vh;
+    padding:calc(24px + env(safe-area-inset-top)) calc(18px + env(safe-area-inset-right)) calc(60px + env(safe-area-inset-bottom)) calc(18px + env(safe-area-inset-left));
+  }
+  .wrap{max-width:1100px;margin:0 auto;}
+
+  /* Header */
+  header{
+    display:flex;
+    flex-wrap:wrap;
+    gap:20px;
+    align-items:center;
+    justify-content:space-between;
+    padding:22px 26px;
+    background:linear-gradient(160deg, var(--panel), #1a1f45);
+    border:1px solid rgba(240,201,106,0.25);
+    border-radius:16px;
+    box-shadow:var(--shadow);
+    position:relative;
+    overflow:hidden;
+  }
+  header::before{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 90% -20%, rgba(240,201,106,0.18), transparent 55%);
+    pointer-events:none;
+  }
+  .title-block{position:relative;z-index:1;}
+  h1{
+    font-family:'Shippori Mincho', serif;
+    font-weight:800;
+    font-size:clamp(1.5rem, 3vw, 2.1rem);
+    margin:0 0 4px;
+    letter-spacing:.04em;
+    color:var(--gold-bright);
+    text-shadow:0 2px 10px rgba(0,0,0,0.4);
+  }
+  .subtitle{
+    font-size:.85rem;
+    color:#b9c0e8;
+    letter-spacing:.03em;
+  }
+  .overall-gauge{
+    position:relative; z-index:1;
+    display:flex; align-items:center; gap:14px;
+    background:rgba(0,0,0,0.2);
+    border:1px solid rgba(240,201,106,0.3);
+    border-radius:12px;
+    padding:10px 18px;
+    min-width:220px;
+  }
+  .ring{width:56px;height:56px;flex-shrink:0;}
+  .ring circle{transition:stroke-dashoffset .5s ease;}
+  .overall-text .num{font-family:'Shippori Mincho',serif; font-size:1.3rem; font-weight:800; color:var(--gold-bright);}
+  .overall-text .label{font-size:.72rem;color:#a9b0d8;}
+
+  /* Character bar */
+  .char-bar{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    background:var(--panel);
+    padding:12px 16px;
+    border-radius:12px;
+    border:1px solid rgba(240,201,106,0.2);
+    margin:18px 0 0;
+  }
+  .char-bar .char-label{
+    font-size:.78rem; color:#a9b0d8; font-weight:700; white-space:nowrap;
+  }
+  .char-bar select{min-width:140px; flex:0 1 220px;}
+  .char-bar .spacer{flex:1;}
+
+  /* Element tabs */
+  .tabs{
+    display:flex; gap:10px; margin:22px 0 16px;
+    flex-wrap:wrap;
+  }
+  .tab{
+    position:relative;
+    flex:1 1 100px;
+    min-width:96px;
+    background:var(--bg-alt);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px;
+    padding:12px 10px 10px;
+    cursor:pointer;
+    text-align:center;
+    transition:transform .15s ease, border-color .15s ease, background .15s ease;
+    overflow:hidden;
+  }
+  .tab:hover{transform:translateY(-2px);}
+  .tab.active{
+    border-color:var(--tab-color, var(--gold));
+    background:linear-gradient(180deg, rgba(255,255,255,0.06), transparent 70%), var(--bg-alt);
+    box-shadow:0 0 0 1px var(--tab-color, var(--gold)) inset, 0 8px 20px rgba(0,0,0,0.35);
+  }
+  .tab .gem{
+    width:16px;height:16px;margin:0 auto 8px;
+    background:var(--tab-color, var(--gold));
+    clip-path:polygon(50% 0%, 100% 35%, 82% 100%, 18% 100%, 0% 35%);
+    box-shadow:0 0 10px var(--tab-color, var(--gold));
+  }
+  .tab .name{font-size:.82rem;font-weight:700;color:var(--cream);}
+  .tab .count{font-size:.68rem;color:#a9b0d8;margin-top:2px;}
+  .tab .bar-track{
+    height:4px;background:rgba(255,255,255,0.08);
+    border-radius:3px;margin-top:8px;overflow:hidden;
+  }
+  .tab .bar-fill{
+    height:100%;background:var(--tab-color, var(--gold));
+    width:0%;transition:width .4s ease;
+  }
+
+  /* Toolbar */
+  .toolbar{
+    display:flex; flex-wrap:wrap; gap:10px;
+    align-items:center;
+    background:var(--panel);
+    padding:14px 16px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.06);
+    margin-bottom:16px;
+  }
+  select, input[type=text], input[type=search], textarea{
+    font-family:inherit;
+    background:var(--bg);
+    color:var(--cream);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:.85rem;
+  }
+  select:focus, input:focus, textarea:focus{
+    outline:2px solid var(--gold-bright);
+    outline-offset:1px;
+  }
+  .toolbar select{min-width:120px;}
+  .toolbar input[type=search]{flex:1;min-width:160px;}
+  .spacer{flex:1;}
+  .btn{
+    font-family:inherit;
+    border:none;
+    border-radius:8px;
+    padding:9px 16px;
+    font-size:.85rem;
+    font-weight:700;
+    cursor:pointer;
+    transition:filter .15s ease, transform .1s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-gold{background:linear-gradient(180deg, var(--gold-bright), var(--gold)); color:#241c05;}
+  .btn-gold:hover{filter:brightness(1.08);}
+  .btn-ghost{background:transparent;color:var(--cream);border:1px solid rgba(255,255,255,0.25);}
+  .btn-ghost:hover{background:rgba(255,255,255,0.08);}
+  .btn-danger{background:var(--danger);color:#fff;}
+  .btn-danger:hover{filter:brightness(1.1);}
+  .btn-small{padding:5px 10px;font-size:.72rem;border-radius:6px;}
+
+  /* Table */
+  .list-wrap{
+    background:var(--panel);
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.06);
+    overflow:hidden;
+  }
+  table{width:100%;border-collapse:collapse;}
+  thead th{
+    text-align:left;
+    font-size:.72rem;
+    letter-spacing:.05em;
+    color:#a9b0d8;
+    background:rgba(0,0,0,0.2);
+    padding:10px 12px;
+    position:sticky;top:0;
+  }
+  tbody td{
+    padding:10px 12px;
+    font-size:.84rem;
+    border-top:1px solid rgba(255,255,255,0.06);
+    vertical-align:top;
+  }
+  tbody tr.acquired{background:rgba(63,158,107,0.08);}
+  tbody tr:hover{background:rgba(255,255,255,0.04);}
+  tbody tr[data-id]{cursor:pointer;}
+  tbody tr[data-id] .chk-acquired{cursor:pointer;}
+  .badge{
+    display:inline-block;
+    padding:2px 9px;
+    border-radius:999px;
+    font-size:.7rem;
+    font-weight:700;
+    color:#12142a;
+    background:var(--badge-color, var(--gold));
+  }
+  .checkbox-cell{text-align:center;width:44px;}
+  .checkbox-cell input{width:18px;height:18px;cursor:pointer;accent-color:var(--gold-bright);}
+  .name-cell{font-weight:700;color:var(--gold-bright);white-space:nowrap;}
+  .effect-cell{color:#d8ddf5;line-height:1.4;}
+  .job-cell{color:#c7cdef;max-width:220px;line-height:1.5;}
+  .weapon-cell{white-space:nowrap;color:#c7cdef;}
+  .empty-row td{
+    text-align:center;padding:40px 20px;color:#8f96c4;font-size:.85rem;
+  }
+
+  footer.stats{
+    margin-top:14px;
+    display:flex;flex-wrap:wrap;gap:10px 20px;
+    font-size:.78rem;color:#a9b0d8;
+    justify-content:space-between;
+  }
+  .toast{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--panel);border:1px solid var(--gold);color:var(--cream);
+    padding:9px 18px;border-radius:8px;font-size:.8rem;
+    opacity:0;transition:opacity .25s ease, transform .25s ease;
+    pointer-events:none;
+    box-shadow:var(--shadow);
+    z-index:50;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media (max-width:640px){
+    thead{display:none;}
+    table, tbody, tr, td{display:block;width:100%;}
+    tbody tr{
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:10px;margin-bottom:10px;padding:8px 10px;
+      background:rgba(255,255,255,0.02);
+    }
+    tbody td{border:none;padding:4px 2px;display:flex;justify-content:space-between;gap:10px;}
+    tbody td::before{content:attr(data-label);font-size:.68rem;color:#8f96c4;font-weight:700;flex-shrink:0;}
+    .checkbox-cell{justify-content:flex-start;}
+  }
+
+  /* ページナビゲーション */
+  .page-nav{
+    display:flex; gap:8px; flex-wrap:wrap;
+    margin:18px 0 4px;
+  }
+  .page-nav-btn{
+    font-family:inherit;
+    background:var(--panel);
+    color:#a9b0d8;
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:999px;
+    padding:8px 18px;
+    font-size:.82rem;
+    font-weight:700;
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .page-nav-btn:hover{background:rgba(255,255,255,0.06);}
+  .page-nav-btn.active{
+    background:linear-gradient(180deg, var(--gold-bright), var(--gold));
+    color:#241c05;
+    border-color:transparent;
+  }
+
+  #pageJobStats, #pageWeaponStats, #pageShare{display:none;}
+  .stats-page-title{
+    font-family:'Shippori Mincho', serif;
+    color:var(--gold-bright);
+    font-size:1.2rem;
+    margin:20px 0 6px;
+  }
+  .stats-page-note{
+    font-size:.8rem;
+    color:#a9b0d8;
+    margin:0 0 18px;
+    line-height:1.6;
+  }
+  .stats-chart{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    background:var(--panel);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:12px;
+    padding:18px 20px;
+  }
+  .stat-row{
+    display:grid;
+    grid-template-columns:110px 1fr 90px;
+    align-items:center;
+    gap:14px;
+  }
+  .stat-row .stat-label{
+    font-size:.82rem;
+    font-weight:700;
+    color:var(--cream);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .stat-row .stat-bar-track{
+    height:14px;
+    background:rgba(255,255,255,0.08);
+    border-radius:7px;
+    overflow:hidden;
+  }
+  .stat-row .stat-bar-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--gold), var(--gold-bright));
+    border-radius:7px;
+    transition:width .4s ease;
+  }
+  .stat-row .stat-count{
+    font-size:.78rem;
+    color:#a9b0d8;
+    text-align:right;
+    white-space:nowrap;
+  }
+  .stat-empty{
+    text-align:center;
+    color:#8f96c4;
+    font-size:.85rem;
+    padding:20px;
+  }
+  @media (max-width:640px){
+    .stat-row{grid-template-columns:80px 1fr 70px; gap:8px;}
+  }
+
+  /* 共有・比較ページ */
+  .share-section{
+    background:var(--panel);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:12px;
+    padding:18px 20px;
+    margin-bottom:20px;
+  }
+  .share-section-title{
+    font-family:'Shippori Mincho', serif;
+    color:var(--gold-bright);
+    font-size:1rem;
+    margin:0 0 8px;
+  }
+  .share-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .share-row select{flex:0 1 220px; min-width:160px;}
+  .share-code-box{
+    width:100%;
+    font-family:'SFMono-Regular', Consolas, monospace;
+    font-size:.78rem;
+    resize:vertical;
+    margin-bottom:10px;
+    word-break:break-all;
+  }
+  .compare-list{
+    max-height:520px;
+    overflow-y:auto;
+    display:block;
+  }
+  .compare-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    gap:8px 12px;
+    padding:8px 4px;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    font-size:.82rem;
+  }
+  .compare-row:last-child{border-bottom:none;}
+  .compare-row .name{font-weight:700;color:var(--gold-bright);}
+  .compare-row .job{color:#c7cdef;font-size:.76rem;}
+  .compare-row .effect{color:#d8ddf5;font-size:.78rem;width:100%;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="title-block">
+      <h1>宝珠管理帳</h1>
+      <div class="subtitle">DQX 達人の宝珠 取得トラッカー</div>
+    </div>
+    <div class="overall-gauge">
+      <svg class="ring" viewBox="0 0 60 60">
+        <circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="6"/>
+        <circle id="ringFill" cx="30" cy="30" r="26" fill="none" stroke="#f0c96a" stroke-width="6"
+                stroke-linecap="round" stroke-dasharray="163.36" stroke-dashoffset="163.36"
+                transform="rotate(-90 30 30)"/>
+      </svg>
+      <div class="overall-text">
+        <div class="num" id="overallPercent">0%</div>
+        <div class="label" id="overallCount">0 / 0 取得</div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="page-nav" id="pageNav">
+    <button class="page-nav-btn active" data-page="main">宝珠一覧</button>
+    <button class="page-nav-btn" data-page="jobStats">職業別の取得状況</button>
+    <button class="page-nav-btn" data-page="weaponStats">武器種別の取得状況</button>
+    <button class="page-nav-btn" data-page="share">共有・比較</button>
+  </nav>
+
+  <div id="pageMain">
+
+  <div class="char-bar">
+    <span class="char-label">キャラクター</span>
+    <select id="charSelect"></select>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost btn-small" id="btnCharAdd">＋ 新規キャラ</button>
+    <button class="btn btn-ghost btn-small" id="btnCharRename">名前変更</button>
+    <button class="btn btn-danger btn-small" id="btnCharDelete">削除</button>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="toolbar">
+    <select id="filterJob"><option value="">職業：すべて</option></select>
+    <select id="filterWeapon"><option value="">武器種：すべて</option></select>
+    <select id="filterStatus">
+      <option value="">状況：すべて</option>
+      <option value="done">取得済みのみ</option>
+      <option value="todo">未取得のみ</option>
+    </select>
+    <input type="search" id="searchInput" placeholder="宝珠名・効果で検索">
+    <div class="spacer"></div>
+    <button class="btn btn-ghost btn-small" id="btnMarkAllDone">表示中を全て取得済みに</button>
+    <button class="btn btn-ghost btn-small" id="btnMarkAllUndone">表示中を全て未取得に</button>
+    <button class="btn btn-ghost" id="btnReloadOfficial">公式データを再読み込み</button>
+  </div>
+
+  <div class="list-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>取得</th>
+          <th>ちから</th>
+          <th>職業</th>
+          <th>武器種</th>
+          <th>宝珠名</th>
+          <th>効果</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+      </tbody>
+    </table>
+  </div>
+
+  <footer class="stats" id="statsFooter"></footer>
+
+  </div>
+
+  <div id="pageJobStats" class="stats-page">
+    <h2 class="stats-page-title">職業別の取得状況</h2>
+    <p class="stats-page-note">現在選択中のキャラクターについて、各職業が対象になっている宝珠の取得率を表示します（複数職業対応の宝珠は、対象となる職業すべてのカウントに含まれます）。</p>
+    <div id="jobStatsChart" class="stats-chart"></div>
+  </div>
+
+  <div id="pageWeaponStats" class="stats-page">
+    <h2 class="stats-page-title">武器種別の取得状況</h2>
+    <p class="stats-page-note">現在選択中のキャラクターについて、各武器種が設定されている宝珠の取得率を表示します（武器種が未設定の宝珠は「未設定」としてまとめています）。</p>
+    <div id="weaponStatsChart" class="stats-chart"></div>
+  </div>
+
+  <div id="pageShare" class="stats-page">
+    <h2 class="stats-page-title">キャラクターの共有・比較</h2>
+
+    <div class="share-section">
+      <h3 class="share-section-title">① 共有コードを作成する</h3>
+      <p class="stats-page-note">選んだキャラクターの取得状況を、他の人と共有できる文字列（簡易的な符号化コードで、強固な暗号化ではありません）に変換します。</p>
+      <div class="share-row">
+        <select id="shareCharSelect"></select>
+        <button class="btn btn-gold btn-small" id="btnGenerateShareCode">コードを作成</button>
+      </div>
+      <textarea id="shareCodeOutput" class="share-code-box" readonly rows="4" placeholder="「コードを作成」を押すとここに表示されます"></textarea>
+      <button class="btn btn-ghost btn-small" id="btnCopyShareCode">コピーする</button>
+    </div>
+
+    <div class="share-section">
+      <h3 class="share-section-title">② 相手のコードと比較する</h3>
+      <p class="stats-page-note">相手から受け取ったコードを貼り付け、比較したい自分のキャラクターを選ぶと、2人とも未取得の宝珠が一覧で確認できます。</p>
+      <textarea id="shareCodeInput" class="share-code-box" rows="4" placeholder="相手から受け取ったコードを貼り付けてください"></textarea>
+      <div class="share-row">
+        <select id="compareCharSelect"></select>
+        <button class="btn btn-gold btn-small" id="btnCompareShareCode">比較する</button>
+      </div>
+      <div id="compareResultMeta" class="stats-page-note"></div>
+      <div id="compareResultList" class="stats-chart compare-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ELEMENTS = ['炎','水','風','光','闇'];
+const ELEMENT_COLOR = {炎:'var(--fire)', 水:'var(--water)', 風:'var(--wind)', 光:'var(--light)', 闇:'var(--dark)'};
+const JOBS = ['共通','戦士','武闘','魔使','僧侶','盗賊','旅芸','バト','レン','パラ','スパ','魔戦','賢者','まも','海賊','魔剣','ガデ','天地','占い','踊り','遊び','竜術','隠者','スト'];
+const WEAPONS = ['片手剣','両手剣','短剣','スティック','両手杖','ヤリ','オノ','棍','ツメ','ムチ','扇','ハンマー','ブーメラン','弓','鎌','格闘'];
+
+const STORAGE_KEY = 'dqx-houju-profile-v3';     // キャラクター管理対応の保存形式（公式データ反映版）
+const OLD_STORAGE_KEY = 'dqx-houju-list';        // 旧バージョン（キャラ管理なし）からの移行用
+
+let state = { activeCharId: null, characters: [] };
+let activeElement = 'すべて';
+
+const OFFICIAL_HOUJU_DATA = [{"id":"h-0001","chikara":"光","jobs":["戦士"],"weapon":"","name":"戦士の閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0002","chikara":"光","jobs":["戦士"],"weapon":"","name":"会心必中の極意","effect":"ダメージ10%アップ","acquired":false},{"id":"h-0003","chikara":"光","jobs":["戦士"],"weapon":"","name":"かばうの極意","effect":"受けるダメージを1軽減","acquired":false},{"id":"h-0004","chikara":"光","jobs":["戦士"],"weapon":"","name":"やいばくだきの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0005","chikara":"光","jobs":["戦士"],"weapon":"","name":"チャージタックルの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0006","chikara":"光","jobs":["戦士"],"weapon":"","name":"真・やいばくだきの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0007","chikara":"光","jobs":["戦士"],"weapon":"","name":"真・やいばくだきの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0008","chikara":"光","jobs":["僧侶"],"weapon":"","name":"僧侶の閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0009","chikara":"光","jobs":["僧侶"],"weapon":"","name":"聖女の守りの瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0010","chikara":"光","jobs":["僧侶"],"weapon":"","name":"聖女の守りの戦域","effect":"射程距離0.2mアップ","acquired":false},{"id":"h-0011","chikara":"光","jobs":["僧侶"],"weapon":"","name":"天使の守りの瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0012","chikara":"光","jobs":["僧侶"],"weapon":"","name":"ホーリーライトの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0013","chikara":"光","jobs":["魔使"],"weapon":"","name":"魔法使いの閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0014","chikara":"光","jobs":["魔使"],"weapon":"","name":"メドローアの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0015","chikara":"光","jobs":["武闘"],"weapon":"","name":"一喝の極意","effect":"10%で追加テンションアップ","acquired":false},{"id":"h-0016","chikara":"光","jobs":["武闘"],"weapon":"","name":"ためるの極意","effect":"1%で追加テンションアップ","acquired":false},{"id":"h-0017","chikara":"光","jobs":["武闘"],"weapon":"","name":"ためる参の極意","effect":"1%で追加テンションアップ","acquired":false},{"id":"h-0018","chikara":"光","jobs":["武闘"],"weapon":"","name":"打成一片の極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0019","chikara":"光","jobs":["盗賊"],"weapon":"","name":"お宝ハンターの極意","effect":"ダメージ50アップ","acquired":false},{"id":"h-0020","chikara":"光","jobs":["盗賊"],"weapon":"","name":"サプライズラッシュの技巧","effect":"成功率2%アップ","acquired":false},{"id":"h-0021","chikara":"光","jobs":["盗賊"],"weapon":"","name":"ネバネバ爆弾の戦域","effect":"射程距離0.3mアップ","acquired":false},{"id":"h-0022","chikara":"光","jobs":["旅芸"],"weapon":"","name":"旅芸人の閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0023","chikara":"光","jobs":["旅芸"],"weapon":"","name":"トリックゾーンの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0024","chikara":"光","jobs":["旅芸"],"weapon":"","name":"果てなきタップダンス","effect":"効果時間 +5秒","acquired":false},{"id":"h-0025","chikara":"光","jobs":["旅芸"],"weapon":"","name":"ハッスルダンスの戦域","effect":"効果範囲0.3mアップ","acquired":false},{"id":"h-0026","chikara":"光","jobs":["旅芸"],"weapon":"","name":"いやしのメロディの戦域","effect":"効果範囲1mアップ","acquired":false},{"id":"h-0027","chikara":"光","jobs":["バト"],"weapon":"","name":"バトルマスターの閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0028","chikara":"光","jobs":["バト"],"weapon":"","name":"ラッシュバーンの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0029","chikara":"光","jobs":["バト"],"weapon":"","name":"とうこん討ちの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0030","chikara":"光","jobs":["バト"],"weapon":"","name":"無心こうげきの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0031","chikara":"光","jobs":["バト"],"weapon":"","name":"天下無双の極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0032","chikara":"光","jobs":["バト"],"weapon":"","name":"果てなきテンションバーン","effect":"効果時間 +3秒","acquired":false},{"id":"h-0033","chikara":"光","jobs":["バト"],"weapon":"","name":"果てなきミラクルブースト","effect":"効果時間 +3秒","acquired":false},{"id":"h-0034","chikara":"光","jobs":["バト"],"weapon":"","name":"古今無双の極意","effect":"ダメージ1%アップ","acquired":false},{"id":"h-0035","chikara":"光","jobs":["パラ"],"weapon":"","name":"果てなきパラディンガード","effect":"効果時間 +1秒","acquired":false},{"id":"h-0036","chikara":"光","jobs":["パラ"],"weapon":"","name":"果てなき聖光の鎧","effect":"効果時間 +2秒","acquired":false},{"id":"h-0037","chikara":"光","jobs":["パラ"],"weapon":"","name":"におうだちの極意","effect":"受けるダメージを1軽減","acquired":false},{"id":"h-0038","chikara":"光","jobs":["パラ"],"weapon":"","name":"果てなきヘヴィチャージ","effect":"効果時間 +3秒","acquired":false},{"id":"h-0039","chikara":"光","jobs":["パラ"],"weapon":"","name":"大ぼうぎょの極意","effect":"受けるダメージを2%軽減","acquired":false},{"id":"h-0040","chikara":"光","jobs":["パラ"],"weapon":"","name":"グランドネビュラの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0041","chikara":"光","jobs":["パラ"],"weapon":"","name":"果てなき鉄壁の進軍","effect":"効果時間 +1秒","acquired":false},{"id":"h-0042","chikara":"光","jobs":["魔戦"],"weapon":"","name":"マジックルーレットの戦域","effect":"効果範囲0.3mアップ","acquired":false},{"id":"h-0043","chikara":"光","jobs":["魔戦"],"weapon":"","name":"フォースブレイクの極意","effect":"ダメージ6%アップ","acquired":false},{"id":"h-0044","chikara":"光","jobs":["魔戦"],"weapon":"","name":"フォースブレイクの技巧","effect":"成功率2%アップ","acquired":false},{"id":"h-0045","chikara":"光","jobs":["レン"],"weapon":"","name":"レンジャーの閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0046","chikara":"光","jobs":["レン"],"weapon":"","name":"メタルトラップの技巧","effect":"成功率6%アップ","acquired":false},{"id":"h-0047","chikara":"光","jobs":["レン"],"weapon":"","name":"まもりのきりの戦域","effect":"効果範囲0.3mアップ","acquired":false},{"id":"h-0048","chikara":"光","jobs":["レン"],"weapon":"","name":"オオカミアタックの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0049","chikara":"光","jobs":["レン"],"weapon":"","name":"フェンリルアタックの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0050","chikara":"光","jobs":["賢者"],"weapon":"","name":"賢者の閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0051","chikara":"光","jobs":["賢者"],"weapon":"","name":"いやしの雨の瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0052","chikara":"光","jobs":["賢者"],"weapon":"","name":"魔導の書の技巧","effect":"成功率8%アップ","acquired":false},{"id":"h-0053","chikara":"光","jobs":["スパ"],"weapon":"","name":"スーパースターの閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0054","chikara":"光","jobs":["スパ"],"weapon":"","name":"果てなきモンスターゾーン","effect":"効果時間 +2秒","acquired":false},{"id":"h-0055","chikara":"光","jobs":["スパ"],"weapon":"","name":"果てなき銀幕の世界","effect":"効果時間 +1秒","acquired":false},{"id":"h-0056","chikara":"光","jobs":["スパ"],"weapon":"","name":"スキャンダルの技巧","effect":"成功率2%アップ","acquired":false},{"id":"h-0057","chikara":"光","jobs":["まも"],"weapon":"","name":"流星爪牙の極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0058","chikara":"光","jobs":["まも"],"weapon":"","name":"ブレスクラッシュの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0059","chikara":"光","jobs":["まも"],"weapon":"","name":"スキルクラッシュの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0060","chikara":"光","jobs":["まも"],"weapon":"","name":"スキルクラッシュの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0061","chikara":"光","jobs":["まも"],"weapon":"","name":"果てなきウォークライ","effect":"効果時間 +1秒","acquired":false},{"id":"h-0062","chikara":"光","jobs":["まも"],"weapon":"","name":"ビーストファングの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0063","chikara":"光","jobs":["どう"],"weapon":"","name":"アブソリュートレイの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0064","chikara":"光","jobs":["どう"],"weapon":"","name":"果てなきどうぐ倍化術","effect":"効果時間 +3秒","acquired":false},{"id":"h-0065","chikara":"光","jobs":["どう"],"weapon":"","name":"果てなきどうぐ範囲化術","effect":"効果時間 +3秒","acquired":false},{"id":"h-0066","chikara":"光","jobs":["どう"],"weapon":"","name":"プラズマリムーバーの瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0067","chikara":"光","jobs":["どう"],"weapon":"","name":"プラズマリムーバーの戦域","effect":"効果範囲0.5mアップ","acquired":false},{"id":"h-0068","chikara":"光","jobs":["踊り"],"weapon":"","name":"魔力のバラードの瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0069","chikara":"光","jobs":["踊り"],"weapon":"","name":"ドラゴンステップの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0070","chikara":"光","jobs":["踊り"],"weapon":"","name":"戦鬼の乱れ舞の瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0071","chikara":"光","jobs":["占い"],"weapon":"","name":"果てなきワイルドカード","effect":"効果時間 +3秒","acquired":false},{"id":"h-0072","chikara":"光","jobs":["占い"],"weapon":"","name":"罪人のタロットの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0073","chikara":"光","jobs":["占い"],"weapon":"","name":"隠者のタロットの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0074","chikara":"光","jobs":["占い"],"weapon":"","name":"死神のタロットの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0075","chikara":"光","jobs":["占い"],"weapon":"","name":"塔のタロットの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0076","chikara":"光","jobs":["天地"],"weapon":"","name":"シュジャク召喚の極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0077","chikara":"光","jobs":["天地"],"weapon":"","name":"じわれの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0078","chikara":"光","jobs":["天地"],"weapon":"","name":"いなずまの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0079","chikara":"光","jobs":["天地"],"weapon":"","name":"めいどうふうまの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0080","chikara":"光","jobs":["天地"],"weapon":"","name":"マグマの極意","effect":"ダメージ1%アップ","acquired":false},{"id":"h-0081","chikara":"光","jobs":["天地"],"weapon":"","name":"水神のたつまきの極意","effect":"ダメージ1%アップ","acquired":false},{"id":"h-0082","chikara":"光","jobs":["天地"],"weapon":"","name":"れんごく火炎の極意","effect":"ダメージ1%アップ","acquired":false},{"id":"h-0083","chikara":"光","jobs":["天地"],"weapon":"","name":"しんくう竜巻の極意","effect":"ダメージ1%アップ","acquired":false},{"id":"h-0084","chikara":"光","jobs":["遊び"],"weapon":"","name":"遊び人の閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0085","chikara":"光","jobs":["遊び"],"weapon":"","name":"びっくりルーレットの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0086","chikara":"光","jobs":["遊び"],"weapon":"","name":"なめまわしの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0087","chikara":"光","jobs":["遊び"],"weapon":"","name":"ぱふぱふの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0088","chikara":"光","jobs":["遊び"],"weapon":"","name":"果てなきほんきであそぶ","effect":"効果時間 +3秒","acquired":false},{"id":"h-0089","chikara":"光","jobs":["デス"],"weapon":"","name":"デスマスターの閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0090","chikara":"光","jobs":["デス"],"weapon":"","name":"呪詛の極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0091","chikara":"光","jobs":["デス"],"weapon":"","name":"大呪詛の極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0092","chikara":"光","jobs":["魔剣"],"weapon":"","name":"魔剣士の閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0093","chikara":"光","jobs":["魔剣"],"weapon":"","name":"果てなき錬魔の秘法","effect":"効果時間 +2秒","acquired":false},{"id":"h-0094","chikara":"光","jobs":["魔剣"],"weapon":"","name":"果てなき闇のヴェール","effect":"効果時間 +1秒","acquired":false},{"id":"h-0095","chikara":"光","jobs":["魔剣"],"weapon":"","name":"暗黒連撃の極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0096","chikara":"光","jobs":["海賊"],"weapon":"","name":"海賊の閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0097","chikara":"光","jobs":["海賊"],"weapon":"","name":"タル投げの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0098","chikara":"光","jobs":["海賊"],"weapon":"","name":"しびれ弾ショットの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0099","chikara":"光","jobs":["海賊"],"weapon":"","name":"火炎弾ショットの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0100","chikara":"光","jobs":["海賊"],"weapon":"","name":"錨ぶんまわしの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0101","chikara":"光","jobs":["海賊"],"weapon":"","name":"散弾ショットの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0102","chikara":"光","jobs":["海賊"],"weapon":"","name":"スタン弾ショットの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0103","chikara":"光","jobs":["海賊"],"weapon":"","name":"恐怖弾ショットの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0104","chikara":"光","jobs":["ガデ"],"weapon":"","name":"ブラスターフィストの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0105","chikara":"光","jobs":["ガデ"],"weapon":"","name":"天光連斬の極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0106","chikara":"光","jobs":["ガデ"],"weapon":"","name":"ディバインピルムの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0107","chikara":"光","jobs":["竜術"],"weapon":"","name":"エレメントブーストの瞬き","effect":"発動速度 +3%","acquired":false},{"id":"h-0108","chikara":"光","jobs":["竜術"],"weapon":"","name":"果てなき竜の脈動","effect":"効果時間 +2秒","acquired":false},{"id":"h-0109","chikara":"光","jobs":["魔使","スパ","竜術"],"weapon":"","name":"魔力かくせいの瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0110","chikara":"光","jobs":["隠者"],"weapon":"","name":"隠者の閃き","effect":"ゾーン突入率0.5%アップ","acquired":false},{"id":"h-0111","chikara":"光","jobs":["隠者"],"weapon":"","name":"スピリットブラストの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0112","chikara":"光","jobs":["隠者"],"weapon":"","name":"雷鳴双牙の極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0113","chikara":"光","jobs":["隠者"],"weapon":"","name":"果てなき精霊降臨","effect":"効果時間 +1秒","acquired":false},{"id":"h-0114","chikara":"光","jobs":["隠者"],"weapon":"","name":"精霊獣の祝福の瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0115","chikara":"光","jobs":["隠者"],"weapon":"","name":"ヒーリングドリームの戦域","effect":"効果範囲0.3mアップ","acquired":false},{"id":"h-0116","chikara":"光","jobs":["スト"],"weapon":"","name":"ストームカイザーの閃き","effect":"ゾーン突入率0.5%アップ","acquired":false},{"id":"h-0117","chikara":"光","jobs":["スト"],"weapon":"","name":"果てなき霊鳥の加護","effect":"効果時間 +1秒","acquired":false},{"id":"h-0118","chikara":"光","jobs":["スト"],"weapon":"","name":"六攻おろしの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0119","chikara":"光","jobs":["魔使","踊り","デス"],"weapon":"","name":"メラ系とギラ系呪文の極意","effect":"ダメージ1%アップ","acquired":false},{"id":"h-0120","chikara":"光","jobs":["魔使","旅芸","デス"],"weapon":"","name":"ヒャド系呪文の極意","effect":"ダメージ1%アップ","acquired":false},{"id":"h-0121","chikara":"光","jobs":["魔使","旅芸","デス"],"weapon":"","name":"ヒャド系呪文の真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0122","chikara":"光","jobs":["魔使","賢者"],"weapon":"","name":"イオ系呪文の極意","effect":"ダメージ1%アップ","acquired":false},{"id":"h-0123","chikara":"光","jobs":["僧侶","旅芸","スパ","海賊"],"weapon":"","name":"バギ系呪文の極意","effect":"ダメージ1%アップ","acquired":false},{"id":"h-0124","chikara":"光","jobs":["賢者","魔剣"],"weapon":"","name":"ドルマ系呪文の極意","effect":"ダメージ1%アップ","acquired":false},{"id":"h-0125","chikara":"光","jobs":["竜術"],"weapon":"","name":"ドガン系呪文の真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0126","chikara":"光","jobs":["魔戦"],"weapon":"","name":"マダンテの極意","effect":"ダメージ1%アップ","acquired":false},{"id":"h-0127","chikara":"光","jobs":["共通"],"weapon":"","name":"ロストアタックの極意","effect":"ダメージ8%アップ","acquired":false},{"id":"h-0128","chikara":"光","jobs":["共通"],"weapon":"","name":"ぶきみなひかりの瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0129","chikara":"光","jobs":["共通"],"weapon":"","name":"ぶきみなひかりの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0130","chikara":"光","jobs":["共通"],"weapon":"","name":"心頭滅却の瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0131","chikara":"光","jobs":["共通"],"weapon":"","name":"おたけびの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0132","chikara":"光","jobs":["共通"],"weapon":"","name":"おたけびの戦域","effect":"効果範囲0.3mアップ","acquired":false},{"id":"h-0133","chikara":"光","jobs":["共通"],"weapon":"","name":"ボケの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0134","chikara":"光","jobs":["共通"],"weapon":"","name":"やいばのぼうぎょの極意","effect":"受けるダメージを1%軽減","acquired":false},{"id":"h-0135","chikara":"光","jobs":["共通"],"weapon":"","name":"ファイアフォースの護り","effect":"炎耐性 +2%","acquired":false},{"id":"h-0136","chikara":"光","jobs":["共通"],"weapon":"","name":"ストームフォースの護り","effect":"風と雷耐性 +2%","acquired":false},{"id":"h-0137","chikara":"光","jobs":["共通"],"weapon":"","name":"ダークフォースの護り","effect":"闇と土耐性 +2%","acquired":false},{"id":"h-0138","chikara":"光","jobs":["戦士"],"weapon":"","name":"たいあたりの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0139","chikara":"光","jobs":["僧侶"],"weapon":"","name":"果てなきマホトラのころも","effect":"効果時間 +5秒","acquired":false},{"id":"h-0140","chikara":"光","jobs":["武闘"],"weapon":"","name":"武闘家の閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0141","chikara":"光","jobs":["武闘"],"weapon":"","name":"崩命拳の極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0142","chikara":"光","jobs":["武闘"],"weapon":"","name":"めいそうの奇跡","effect":"回復量3%アップ","acquired":false},{"id":"h-0143","chikara":"光","jobs":["武闘"],"weapon":"","name":"ためる弐の極意","effect":"1%で追加テンションアップ","acquired":false},{"id":"h-0144","chikara":"光","jobs":["武闘"],"weapon":"","name":"無念無想の奇跡","effect":"回復量2%アップ","acquired":false},{"id":"h-0145","chikara":"光","jobs":["盗賊"],"weapon":"","name":"盗賊の閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0146","chikara":"光","jobs":["盗賊"],"weapon":"","name":"ファントムハックの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0147","chikara":"光","jobs":["盗賊"],"weapon":"","name":"サプライズラッシュの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0148","chikara":"光","jobs":["旅芸"],"weapon":"","name":"キラージャグリングの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0149","chikara":"光","jobs":["旅芸"],"weapon":"","name":"ハッスルダンスの奇跡","effect":"回復量3%アップ","acquired":false},{"id":"h-0150","chikara":"光","jobs":["旅芸"],"weapon":"","name":"ゴッドジャグリングの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0151","chikara":"光","jobs":["旅芸"],"weapon":"","name":"たたかいのビートの戦域","effect":"効果範囲0.3mアップ","acquired":false},{"id":"h-0152","chikara":"光","jobs":["バト"],"weapon":"","name":"もろば斬りの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0153","chikara":"光","jobs":["パラ"],"weapon":"","name":"パラディンの閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0154","chikara":"光","jobs":["魔戦"],"weapon":"","name":"魔法戦士の閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0155","chikara":"光","jobs":["魔戦"],"weapon":"","name":"エナジーフォールの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0156","chikara":"光","jobs":["レン"],"weapon":"","name":"アヌビスアタックの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0157","chikara":"光","jobs":["レン"],"weapon":"","name":"てなづけるの技巧","effect":"成功率2%アップ","acquired":false},{"id":"h-0158","chikara":"光","jobs":["レン"],"weapon":"","name":"あんこくのきりの技巧","effect":"成功率2%アップ","acquired":false},{"id":"h-0159","chikara":"光","jobs":["レン"],"weapon":"","name":"紅蓮蝶のきりの戦域","effect":"効果範囲0.3mアップ","acquired":false},{"id":"h-0160","chikara":"光","jobs":["賢者"],"weapon":"","name":"果てなき神の息吹","effect":"効果時間 +5秒","acquired":false},{"id":"h-0161","chikara":"光","jobs":["スパ"],"weapon":"","name":"サインぜめの極意","effect":"ダメージ50%アップ","acquired":false},{"id":"h-0162","chikara":"光","jobs":["スパ"],"weapon":"","name":"メイクアップの瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0163","chikara":"光","jobs":["スパ"],"weapon":"","name":"プレシャスレインの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0164","chikara":"光","jobs":["まも"],"weapon":"","name":"まもの使いの閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0165","chikara":"光","jobs":["まも"],"weapon":"","name":"果てなきビーストモード","effect":"効果時間 +2秒","acquired":false},{"id":"h-0166","chikara":"光","jobs":["まも"],"weapon":"","name":"ブレスクラッシュの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0167","chikara":"光","jobs":["どう"],"weapon":"","name":"どうぐ使いの閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0168","chikara":"光","jobs":["どう"],"weapon":"","name":"磁界シールドの瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0169","chikara":"光","jobs":["どう"],"weapon":"","name":"メディカルデバイスの瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0170","chikara":"光","jobs":["どう"],"weapon":"","name":"バイキルエンハンスの瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0171","chikara":"光","jobs":["踊り"],"weapon":"","name":"踊り子の閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0172","chikara":"光","jobs":["踊り"],"weapon":"","name":"よみがえり節の瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0173","chikara":"光","jobs":["踊り"],"weapon":"","name":"回復のララバイの瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0174","chikara":"光","jobs":["踊り"],"weapon":"","name":"ビーナスステップの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0175","chikara":"光","jobs":["踊り"],"weapon":"","name":"ロイヤルステップの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0176","chikara":"光","jobs":["踊り"],"weapon":"","name":"つるぎの舞の極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0177","chikara":"光","jobs":["占い"],"weapon":"","name":"占い師の閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0178","chikara":"光","jobs":["占い"],"weapon":"","name":"果てなき魅惑の水晶球","effect":"効果時間 +3秒","acquired":false},{"id":"h-0179","chikara":"光","jobs":["占い"],"weapon":"","name":"正義のタロットの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0180","chikara":"光","jobs":["占い"],"weapon":"","name":"戦車のタロットの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0181","chikara":"光","jobs":["占い"],"weapon":"","name":"魅惑の水晶球の瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0182","chikara":"光","jobs":["占い"],"weapon":"","name":"復活の魅惑の水晶球","effect":"復活時5%で魅惑の水晶球","acquired":false},{"id":"h-0183","chikara":"光","jobs":["占い"],"weapon":"","name":"始まりの魅惑の水晶球","effect":"開戦時5%で魅惑の水晶球","acquired":false},{"id":"h-0184","chikara":"光","jobs":["天地"],"weapon":"","name":"天地雷鳴士の閃き","effect":"必殺チャージ率0.5%アップ","acquired":false},{"id":"h-0185","chikara":"光","jobs":["天地"],"weapon":"","name":"ひばしらの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0186","chikara":"光","jobs":["遊び"],"weapon":"","name":"きまぐれの技巧","effect":"発動率5%アップ","acquired":false},{"id":"h-0187","chikara":"光","jobs":["遊び"],"weapon":"","name":"ひゃくれつなめの技巧","effect":"成功率2%アップ","acquired":false},{"id":"h-0188","chikara":"光","jobs":["遊び"],"weapon":"","name":"まねまねの極意","effect":"反射ダメージ2%アップ","acquired":false},{"id":"h-0189","chikara":"光","jobs":["デス"],"weapon":"","name":"デスサイズの極意","effect":"ダメージ1%アップ","acquired":false},{"id":"h-0190","chikara":"光","jobs":["魔剣"],"weapon":"","name":"邪炎波の極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0191","chikara":"光","jobs":["魔剣"],"weapon":"","name":"ダークマターの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0192","chikara":"光","jobs":["魔剣"],"weapon":"","name":"煉獄魔斬の極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0193","chikara":"光","jobs":["魔剣"],"weapon":"","name":"黒炎帝の斬撃の極意","effect":"ダメージ1%アップ","acquired":false},{"id":"h-0194","chikara":"光","jobs":["ガデ"],"weapon":"","name":"ガーディアンの閃き","effect":"ゾーン突入率0.5%アップ","acquired":false},{"id":"h-0195","chikara":"光","jobs":["ガデ"],"weapon":"","name":"果てなきブーストオーラ","effect":"効果時間 +1秒","acquired":false},{"id":"h-0196","chikara":"光","jobs":["ガデ"],"weapon":"","name":"プラーナソードの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0197","chikara":"光","jobs":["竜術"],"weapon":"","name":"竜術士の閃き","effect":"ゾーン突入率0.5%アップ","acquired":false},{"id":"h-0198","chikara":"光","jobs":["竜術"],"weapon":"","name":"マッドブレスの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0199","chikara":"光","jobs":["竜術"],"weapon":"","name":"火球ブレスの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0200","chikara":"光","jobs":["魔使"],"weapon":"","name":"果てなき超魔力かくせい","effect":"効果時間 +2秒","acquired":false},{"id":"h-0201","chikara":"光","jobs":["隠者"],"weapon":"","name":"精霊の鼓動の瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0202","chikara":"光","jobs":["隠者"],"weapon":"","name":"トライアミュレットの戦域","effect":"効果範囲0.3mアップ","acquired":false},{"id":"h-0203","chikara":"光","jobs":["隠者"],"weapon":"","name":"デュアルプロテクトの戦域","effect":"効果範囲0.3mアップ","acquired":false},{"id":"h-0204","chikara":"光","jobs":["スト"],"weapon":"","name":"嵐帝斬りの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0205","chikara":"光","jobs":["スト"],"weapon":"","name":"疾風乱舞の極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0206","chikara":"光","jobs":["スト"],"weapon":"","name":"たつまき旋風の極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0207","chikara":"光","jobs":["スト"],"weapon":"","name":"烈風空絶斬の極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0208","chikara":"光","jobs":["スト"],"weapon":"","name":"果てなき嵐まとい","effect":"効果時間 +1秒","acquired":false},{"id":"h-0209","chikara":"光","jobs":["魔使","踊り","デス"],"weapon":"","name":"メラ系とギラ系呪文の真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0210","chikara":"光","jobs":["魔使","賢者"],"weapon":"","name":"イオ系呪文の真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0211","chikara":"光","jobs":["僧侶","旅芸","スパ","海賊"],"weapon":"","name":"バギ系呪文の真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0212","chikara":"光","jobs":["賢者","魔剣"],"weapon":"","name":"ドルマ系呪文の真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0213","chikara":"光","jobs":["盗賊","レン","竜術"],"weapon":"","name":"ドガン系とジバ系呪文の極意","effect":"ダメージ1%アップ","acquired":false},{"id":"h-0214","chikara":"光","jobs":["共通"],"weapon":"","name":"おはらいの瞬き","effect":"発動速度 +5%","acquired":false},{"id":"h-0215","chikara":"光","jobs":["共通"],"weapon":"","name":"アイスフォースの護り","effect":"氷耐性 +2%","acquired":false},{"id":"h-0216","chikara":"光","jobs":["共通"],"weapon":"","name":"ライトフォースの護り","effect":"光耐性 +2%","acquired":false},{"id":"h-0217","chikara":"闇","jobs":["戦士","バト","パラ","魔戦","占い","遊び","魔剣","ガデ","スト"],"weapon":"","name":"ミラクルソードの極意","effect":"ダメージと回復量5%アップ","acquired":false},{"id":"h-0218","chikara":"闇","jobs":["戦士","バト","パラ","魔戦","占い","遊び","魔剣","ガデ","スト"],"weapon":"","name":"はやぶさ斬りの極意","effect":"ダメージ6%アップ","acquired":false},{"id":"h-0219","chikara":"闇","jobs":["戦士","バト","パラ","魔戦","占い","遊び","魔剣","ガデ","スト"],"weapon":"","name":"ギガスラッシュの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0220","chikara":"闇","jobs":["戦士","バト","パラ","魔戦","占い","遊び","魔剣","ガデ","スト"],"weapon":"","name":"ギガスラッシュの真髄","effect":"テンション時ダメージ20アップ","acquired":false},{"id":"h-0221","chikara":"闇","jobs":["戦士","バト","パラ","魔戦","占い","遊び","魔剣","ガデ","スト"],"weapon":"","name":"超はやぶさ斬りの極意","effect":"ダメージ6%アップ","acquired":false},{"id":"h-0222","chikara":"闇","jobs":["戦士","バト","パラ","魔戦","占い","遊び","魔剣","ガデ","スト"],"weapon":"","name":"ギガブレイクの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0223","chikara":"闇","jobs":["戦士","バト","パラ","魔戦","占い","遊び","魔剣","ガデ","スト"],"weapon":"","name":"不死鳥天舞の極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0224","chikara":"闇","jobs":["戦士","バト","パラ","魔戦","占い","遊び","魔剣","ガデ","スト"],"weapon":"","name":"アルテマソードの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0225","chikara":"闇","jobs":["戦士","バト","まも","魔剣","ガデ"],"weapon":"","name":"ドラゴンスラッシュの極意","effect":"ドラゴン系ダメージ35%アップ","acquired":false},{"id":"h-0226","chikara":"闇","jobs":["戦士","バト","まも","魔剣","ガデ"],"weapon":"","name":"ぶんまわしの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0227","chikara":"闇","jobs":["戦士","バト","まも","魔剣","ガデ"],"weapon":"","name":"フリーズブレードの極意","effect":"ダメージ8%アップ","acquired":false},{"id":"h-0228","chikara":"闇","jobs":["戦士","バト","まも","魔剣","ガデ"],"weapon":"","name":"渾身斬り系の極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0229","chikara":"闇","jobs":["戦士"],"weapon":"","name":"ブレイブスラッシュの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0230","chikara":"闇","jobs":["戦士","バト","まも","魔剣","ガデ"],"weapon":"","name":"全身全霊斬り系の真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0231","chikara":"闇","jobs":["戦士","バト","まも","魔剣","ガデ"],"weapon":"","name":"プラズマブレードの極意","effect":"ダメージ4%アップ","acquired":false},{"id":"h-0232","chikara":"闇","jobs":["戦士","バト","まも","魔剣","ガデ"],"weapon":"","name":"大旋風斬りの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0233","chikara":"闇","jobs":["魔使","盗賊","旅芸","踊り","遊び","魔剣","海賊","スト"],"weapon":"","name":"キラーブーンの極意","effect":"虫系ダメージ25%アップ","acquired":false},{"id":"h-0234","chikara":"闇","jobs":["魔使","盗賊","旅芸","踊り","遊び","魔剣","海賊","スト"],"weapon":"","name":"スリープダガーの極意","effect":"ダメージ8%アップ","acquired":false},{"id":"h-0235","chikara":"闇","jobs":["魔使","盗賊","旅芸","踊り","遊び","魔剣","海賊","スト"],"weapon":"","name":"スリープダガーの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0236","chikara":"闇","jobs":["魔使","盗賊","旅芸","踊り","遊び","魔剣","海賊","スト"],"weapon":"","name":"ヒュプノスハントの極意","effect":"眠り混乱中のダメージ5%アップ","acquired":false},{"id":"h-0237","chikara":"闇","jobs":["魔使","盗賊","旅芸","踊り","遊び","魔剣","海賊","スト"],"weapon":"","name":"ヴァイパーファングの極意","effect":"ダメージ8%アップ","acquired":false},{"id":"h-0238","chikara":"闇","jobs":["魔使","盗賊","旅芸","踊り","遊び","魔剣","海賊","スト"],"weapon":"","name":"タナトスハント系の極意","effect":"毒マヒ中のダメージ5%アップ","acquired":false},{"id":"h-0239","chikara":"闇","jobs":["魔使","盗賊","旅芸","踊り","遊び","魔剣","海賊","スト"],"weapon":"","name":"カオスエッジの極意","effect":"ダメージ8%アップ","acquired":false},{"id":"h-0240","chikara":"闇","jobs":["魔使","盗賊","旅芸","踊り","遊び","魔剣","海賊","スト"],"weapon":"","name":"オネロスハントの極意","effect":"休み中のダメージ5%アップ","acquired":false},{"id":"h-0241","chikara":"闇","jobs":["魔使","盗賊","旅芸","踊り","遊び","魔剣","海賊","スト"],"weapon":"","name":"ネメシスエッジの真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0242","chikara":"闇","jobs":["僧侶","パラ","スパ","踊り","天地","竜術","隠者"],"weapon":"","name":"果てなきマジステッキ","effect":"効果時間 +10秒","acquired":false},{"id":"h-0243","chikara":"闇","jobs":["踊り"],"weapon":"","name":"ディバインステッキの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0244","chikara":"闇","jobs":["パラ","スパ","踊り","天地","竜術","隠者"],"weapon":"","name":"ホップスティックの戦域","effect":"効果範囲0.5mアップ","acquired":false},{"id":"h-0245","chikara":"闇","jobs":["魔使","魔戦","賢者","天地","竜術"],"weapon":"","name":"果てなき活命の杖","effect":"効果時間 +3秒","acquired":false},{"id":"h-0246","chikara":"闇","jobs":["魔使","魔戦","賢者","天地","竜術"],"weapon":"","name":"霊脈魔法陣の戦域","effect":"射程距離0.3mアップ","acquired":false},{"id":"h-0247","chikara":"闇","jobs":["僧侶","武闘","パラ","どう","ガデ","スト"],"weapon":"","name":"けもの突きの極意","effect":"獣系ダメージ35%アップ","acquired":false},{"id":"h-0248","chikara":"闇","jobs":["僧侶","武闘","パラ","どう","ガデ","スト"],"weapon":"","name":"雷鳴突きの極意","effect":"ダメージ15%アップ","acquired":false},{"id":"h-0249","chikara":"闇","jobs":["僧侶","武闘","パラ","どう","ガデ","スト"],"weapon":"","name":"一閃突き系の極意","effect":"会心率2%アップ","acquired":false},{"id":"h-0250","chikara":"闇","jobs":["僧侶","武闘","パラ","どう","ガデ","スト"],"weapon":"","name":"狼牙突きの極意","effect":"ダメージ4%アップ","acquired":false},{"id":"h-0251","chikara":"闇","jobs":["僧侶","武闘","パラ","どう","ガデ","スト"],"weapon":"","name":"さみだれ突き系の極意","effect":"ダメージ4%アップ","acquired":false},{"id":"h-0252","chikara":"闇","jobs":["僧侶","武闘","パラ","どう","ガデ","スト"],"weapon":"","name":"武神の護法の極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0253","chikara":"闇","jobs":["僧侶","武闘","パラ","どう","ガデ","スト"],"weapon":"","name":"武神の護法の技巧","effect":"成功率2%アップ","acquired":false},{"id":"h-0254","chikara":"闇","jobs":["戦士","レン","まも","デス","海賊"],"weapon":"","name":"たいぼく斬の極意","effect":"植物系ダメージ35%アップ","acquired":false},{"id":"h-0255","chikara":"闇","jobs":["戦士","レン","まも","デス","海賊"],"weapon":"","name":"かぶと割りの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0256","chikara":"闇","jobs":["戦士","レン","まも","デス","海賊"],"weapon":"","name":"まじん斬りの極意","effect":"会心率2%アップ","acquired":false},{"id":"h-0257","chikara":"闇","jobs":["戦士","レン","まも","デス","海賊"],"weapon":"","name":"オノむそう系の極意","effect":"ダメージ4%アップ","acquired":false},{"id":"h-0258","chikara":"闇","jobs":["戦士","レン","まも","デス","海賊"],"weapon":"","name":"オノむそう系の真髄","effect":"テンション時ダメージ20アップ","acquired":false},{"id":"h-0259","chikara":"闇","jobs":["戦士","レン","まも","デス","海賊"],"weapon":"","name":"真・オノむそう系の極意","effect":"ダメージ4%アップ","acquired":false},{"id":"h-0260","chikara":"闇","jobs":["僧侶","武闘","旅芸","占い","デス"],"weapon":"","name":"足ばらいの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0261","chikara":"闇","jobs":["僧侶","武闘","旅芸","占い","デス"],"weapon":"","name":"なぎはらいの極意","effect":"ダメージ4%アップ","acquired":false},{"id":"h-0262","chikara":"闇","jobs":["僧侶","武闘","旅芸","占い","デス"],"weapon":"","name":"なぎはらいの真髄","effect":"テンション時ダメージ20アップ","acquired":false},{"id":"h-0263","chikara":"闇","jobs":["僧侶","武闘","旅芸","占い","デス"],"weapon":"","name":"氷結らんげき系の極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0264","chikara":"闇","jobs":["僧侶","武闘","旅芸","デス"],"weapon":"","name":"奥義・棍閃殺の極意","effect":"ダメージ4%アップ","acquired":false},{"id":"h-0265","chikara":"闇","jobs":["僧侶","武闘","旅芸","デス"],"weapon":"","name":"奥義・棍閃殺の真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0266","chikara":"闇","jobs":["占い"],"weapon":"","name":"占技・天輪殺の極意","effect":"ダメージ4%アップ","acquired":false},{"id":"h-0267","chikara":"闇","jobs":["僧侶","武闘","旅芸","占い","デス"],"weapon":"","name":"豪雪氷結乱撃系の極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0268","chikara":"闇","jobs":["武闘","盗賊","レン","まも"],"weapon":"","name":"ウィングブロウの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0269","chikara":"闇","jobs":["武闘","盗賊","レン","まも"],"weapon":"","name":"裂鋼拳の極意","effect":"マシン系ダメージ25%アップ","acquired":false},{"id":"h-0270","chikara":"闇","jobs":["武闘","盗賊","レン","まも"],"weapon":"","name":"タイガークローの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0271","chikara":"闇","jobs":["武闘","盗賊","レン","まも"],"weapon":"","name":"ゴールドフィンガーの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0272","chikara":"闇","jobs":["武闘","盗賊","まも"],"weapon":"","name":"サイクロンアッパーの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0273","chikara":"闇","jobs":["レン"],"weapon":"","name":"サマーソルトクローの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0274","chikara":"闇","jobs":["武闘","盗賊","レン","まも"],"weapon":"","name":"ライガークラッシュの極意","effect":"ダメージ1%アップ","acquired":false},{"id":"h-0275","chikara":"闇","jobs":["武闘","盗賊","レン","まも"],"weapon":"","name":"ライガークラッシュの真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0276","chikara":"闇","jobs":["武闘","盗賊","レン","まも"],"weapon":"","name":"果てなき牙神昇誕系","effect":"効果時間 +3秒","acquired":false},{"id":"h-0277","chikara":"闇","jobs":["武闘","盗賊","レン","まも"],"weapon":"","name":"ゴッドスマッシュの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0278","chikara":"闇","jobs":["魔使","盗賊","スパ","まも","占い"],"weapon":"","name":"しばり打ちの極意","effect":"ダメージ8%アップ","acquired":false},{"id":"h-0279","chikara":"闇","jobs":["魔使","盗賊","スパ","まも","占い"],"weapon":"","name":"地ばしり打ちの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0280","chikara":"闇","jobs":["魔使","盗賊","スパ","まも","占い"],"weapon":"","name":"双竜打ちの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0281","chikara":"闇","jobs":["魔使","盗賊","スパ","まも","占い"],"weapon":"","name":"双竜打ちの真髄","effect":"テンション時ダメージ20アップ","acquired":false},{"id":"h-0282","chikara":"闇","jobs":["魔使","盗賊","スパ","まも","占い"],"weapon":"","name":"疾風迅雷の極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0283","chikara":"闇","jobs":["魔使","盗賊","スパ","まも","占い"],"weapon":"","name":"極竜打ちの極意","effect":"ダメージ4%アップ","acquired":false},{"id":"h-0284","chikara":"闇","jobs":["魔使","盗賊","スパ","まも","占い"],"weapon":"","name":"極竜打ちの真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0285","chikara":"闇","jobs":["魔使","盗賊","スパ","まも","占い"],"weapon":"","name":"バイキルショットの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0286","chikara":"闇","jobs":["魔使","盗賊","スパ","まも","占い"],"weapon":"","name":"悶絶全方打ちの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0287","chikara":"闇","jobs":["武闘","旅芸","賢者","スパ","踊り","天地","隠者","スト"],"weapon":"","name":"花ふぶきの技巧","effect":"成功率10%アップ","acquired":false},{"id":"h-0288","chikara":"闇","jobs":["武闘","旅芸","賢者","スパ","踊り","天地","隠者","スト"],"weapon":"","name":"波紋演舞の極意","effect":"水系ダメージ25%アップ","acquired":false},{"id":"h-0289","chikara":"闇","jobs":["旅芸"],"weapon":"","name":"タタリ目演舞の極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0290","chikara":"闇","jobs":["武闘","旅芸","賢者","スパ","踊り","天地","隠者","スト"],"weapon":"","name":"おうぎのまい系の極意","effect":"ダメージ6%アップ","acquired":false},{"id":"h-0291","chikara":"闇","jobs":["武闘","旅芸","賢者","スパ","踊り","天地","隠者","スト"],"weapon":"","name":"アゲハ乱舞系の真髄","effect":"テンション時ダメージ20アップ","acquired":false},{"id":"h-0292","chikara":"闇","jobs":["武闘","旅芸","賢者","スパ","踊り","天地","隠者","スト"],"weapon":"","name":"百花繚乱系の極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0293","chikara":"闇","jobs":["武闘","旅芸","賢者","スパ","踊り","天地","隠者","スト"],"weapon":"","name":"百花繚乱系の真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0294","chikara":"闇","jobs":["盗賊","バト","パラ","どう","遊び"],"weapon":"","name":"ウェイトブレイクの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0295","chikara":"闇","jobs":["盗賊","バト","パラ","どう","遊び"],"weapon":"","name":"ウェイトブレイクの技巧","effect":"成功率10%アップ","acquired":false},{"id":"h-0296","chikara":"闇","jobs":["盗賊","バト","パラ","どう","遊び"],"weapon":"","name":"ドラムクラッシュの極意","effect":"物質系ダメージ25%アップ","acquired":false},{"id":"h-0297","chikara":"闇","jobs":["盗賊","バト","パラ","どう","遊び"],"weapon":"","name":"ランドインパクトの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0298","chikara":"闇","jobs":["盗賊","バト","パラ","どう","遊び"],"weapon":"","name":"ランドインパクトの真髄","effect":"テンション時ダメージ20アップ","acquired":false},{"id":"h-0299","chikara":"闇","jobs":["盗賊","バト","パラ","どう","遊び"],"weapon":"","name":"スタンショットの技巧","effect":"成功率2%アップ","acquired":false},{"id":"h-0300","chikara":"闇","jobs":["盗賊","バト","パラ","どう","遊び"],"weapon":"","name":"プレートインパクトの真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0301","chikara":"闇","jobs":["盗賊","バト","パラ","どう","遊び"],"weapon":"","name":"アースクラッシュの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0302","chikara":"闇","jobs":["旅芸","レン","賢者","どう","遊び","海賊","隠者"],"weapon":"","name":"スライムブロウの極意","effect":"スライム系ダメージ25%アップ","acquired":false},{"id":"h-0303","chikara":"闇","jobs":["旅芸","レン","賢者","どう","遊び","海賊","隠者"],"weapon":"","name":"パワフルスローの極意","effect":"ダメージ6%と会心率1%アップ","acquired":false},{"id":"h-0304","chikara":"闇","jobs":["旅芸","賢者","どう","遊び","海賊","隠者"],"weapon":"","name":"バーニングバードの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0305","chikara":"闇","jobs":["レン"],"weapon":"","name":"バーニングスワローの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0306","chikara":"闇","jobs":["旅芸","賢者","どう","遊び","海賊","隠者"],"weapon":"","name":"フローズンバードの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0307","chikara":"闇","jobs":["レン"],"weapon":"","name":"フローズンスワローの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0308","chikara":"闇","jobs":["旅芸","レン","賢者","どう","遊び","海賊","隠者"],"weapon":"","name":"デュアルブレイカーの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0309","chikara":"闇","jobs":["旅芸","レン","賢者","どう","遊び","海賊","隠者"],"weapon":"","name":"デュアルブレイカーの真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0310","chikara":"闇","jobs":["旅芸","賢者","どう","遊び","海賊","隠者"],"weapon":"","name":"ギガスローの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0311","chikara":"闇","jobs":["魔戦","レン","賢者","どう","占い","デス","海賊","竜術","隠者"],"weapon":"","name":"マジックアローの極意","effect":"ダメージ8%アップ","acquired":false},{"id":"h-0312","chikara":"闇","jobs":["魔戦","レン","賢者","どう","占い","デス","海賊","竜術","隠者"],"weapon":"","name":"マジックアローの技巧","effect":"成功率10%アップ","acquired":false},{"id":"h-0313","chikara":"闇","jobs":["魔戦","レン","賢者","どう","占い","デス","海賊","竜術","隠者"],"weapon":"","name":"バードシュートの極意","effect":"鳥系ダメージ35%アップ","acquired":false},{"id":"h-0314","chikara":"闇","jobs":["魔戦","レン","賢者","どう","占い","デス","海賊","竜術","隠者"],"weapon":"","name":"サンダーボルトの極意","effect":"ダメージ15%アップ","acquired":false},{"id":"h-0315","chikara":"闇","jobs":["魔戦","レン","賢者","どう","占い","デス","海賊","竜術","隠者"],"weapon":"","name":"さみだれうち系の極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0316","chikara":"闇","jobs":["魔戦","レン","賢者","どう","占い","デス","海賊","竜術","隠者"],"weapon":"","name":"さみだれうち系の真髄","effect":"テンション時ダメージ20アップ","acquired":false},{"id":"h-0317","chikara":"闇","jobs":["魔戦","レン","賢者","どう","占い","デス","海賊","竜術","隠者"],"weapon":"","name":"天使の矢の極意","effect":"ダメージ8%と回復量2%アップ","acquired":false},{"id":"h-0318","chikara":"闇","jobs":["魔戦","レン","賢者","どう","占い","デス","海賊","隠者"],"weapon":"","name":"シャイニングボウの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0319","chikara":"闇","jobs":["竜術"],"weapon":"","name":"セイクリッドボウの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0320","chikara":"闇","jobs":["魔戦","レン","賢者","どう","占い","デス","海賊","竜術"],"weapon":"","name":"弓聖の守り星の戦域","effect":"効果範囲0.3mアップ","acquired":false},{"id":"h-0321","chikara":"闇","jobs":["隠者"],"weapon":"","name":"弓神の守護星座の戦域","effect":"効果範囲0.3mアップ","acquired":false},{"id":"h-0322","chikara":"闇","jobs":["魔戦","レン","賢者","どう","占い","デス","海賊","竜術","隠者"],"weapon":"","name":"ダークネスショットの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0323","chikara":"闇","jobs":["魔戦","レン","賢者","どう","占い","デス","海賊","竜術","隠者"],"weapon":"","name":"ダークネスショットの真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0324","chikara":"闇","jobs":["魔戦","賢者","どう","占い","デス","海賊","竜術","隠者"],"weapon":"","name":"ロストスナイプの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0325","chikara":"闇","jobs":["レン"],"weapon":"","name":"ロストショットの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0326","chikara":"闇","jobs":["魔戦","レン","賢者","どう","占い","デス","海賊","竜術","隠者"],"weapon":"","name":"サンライトアローの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0327","chikara":"闇","jobs":["スパ","デス","竜術"],"weapon":"","name":"果てなき血吸いの守り","effect":"効果時間 +3秒","acquired":false},{"id":"h-0328","chikara":"闇","jobs":["魔剣"],"weapon":"","name":"果てなき蒼月の守り","effect":"効果時間 +5秒","acquired":false},{"id":"h-0329","chikara":"闇","jobs":["スパ","デス","魔剣","竜術"],"weapon":"","name":"冥王のかまの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0330","chikara":"闇","jobs":["スパ","デス","魔剣","竜術"],"weapon":"","name":"魂狩りの極意","effect":"会心率1%アップ","acquired":false},{"id":"h-0331","chikara":"闇","jobs":["スパ","デス","魔剣","竜術"],"weapon":"","name":"災いの斬撃の極意","effect":"ダメージ4%アップ","acquired":false},{"id":"h-0332","chikara":"闇","jobs":["スパ","デス","魔剣","竜術"],"weapon":"","name":"災いの斬撃の真髄","effect":"テンション時ダメージ20アップ","acquired":false},{"id":"h-0333","chikara":"闇","jobs":["スパ","デス","魔剣","竜術"],"weapon":"","name":"ハデスの宴の極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0334","chikara":"闇","jobs":["スパ","デス","魔剣","竜術"],"weapon":"","name":"厄災の滅撃の極意","effect":"ダメージ4%アップ","acquired":false},{"id":"h-0335","chikara":"闇","jobs":["スパ","デス","魔剣","竜術"],"weapon":"","name":"根絶やしの重撃の極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0336","chikara":"闇","jobs":["共通"],"weapon":"","name":"岩石おとしの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0337","chikara":"闇","jobs":["共通"],"weapon":"","name":"せいけん爆撃の極意","effect":"ダメージ3%と会心率1%アップ","acquired":false},{"id":"h-0338","chikara":"闇","jobs":["戦士","バト","パラ","魔戦","占い","遊び","魔剣","ガデ","スト"],"weapon":"","name":"かえん斬りの極意","effect":"ダメージ15%アップ","acquired":false},{"id":"h-0339","chikara":"闇","jobs":["戦士","バト","パラ","魔戦","占い","遊び","魔剣","ガデ","スト"],"weapon":"","name":"ドラゴン斬りの極意","effect":"ドラゴン系ダメージ25%アップ","acquired":false},{"id":"h-0340","chikara":"闇","jobs":["戦士","バト","パラ","魔戦","占い","遊び","魔剣","ガデ","スト"],"weapon":"","name":"ギガブレイクの真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0341","chikara":"闇","jobs":["戦士","バト","まも","魔剣","ガデ"],"weapon":"","name":"果てなきブレードガード","effect":"効果時間 +5秒","acquired":false},{"id":"h-0342","chikara":"闇","jobs":["戦士","バト","まも","魔剣","ガデ"],"weapon":"","name":"ぶんまわしの真髄","effect":"テンション時ダメージ20アップ","acquired":false},{"id":"h-0343","chikara":"闇","jobs":["戦士","バト","まも","魔剣","ガデ"],"weapon":"","name":"ビッグバンの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0344","chikara":"闇","jobs":["戦士","バト","まも","魔剣","ガデ"],"weapon":"","name":"全身全霊斬り系の極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0345","chikara":"闇","jobs":["魔使","盗賊","旅芸","踊り","遊び","魔剣","海賊","スト"],"weapon":"","name":"ヴァイパーファングの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0346","chikara":"闇","jobs":["魔使","盗賊","旅芸","踊り","遊び","魔剣","海賊","スト"],"weapon":"","name":"タナトスハント系の真髄","effect":"テンション時ダメージ20アップ","acquired":false},{"id":"h-0347","chikara":"闇","jobs":["魔使","盗賊","旅芸","踊り","遊び","魔剣","海賊","スト"],"weapon":"","name":"ナイトメアファングの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0348","chikara":"闇","jobs":["魔使","盗賊","旅芸","踊り","遊び","魔剣","海賊","スト"],"weapon":"","name":"ネメシスエッジの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0349","chikara":"闇","jobs":["僧侶","パラ","スパ","踊り","天地","竜術","隠者"],"weapon":"","name":"デビルンチャームの極意","effect":"悪魔系ダメージ20%アップ","acquired":false},{"id":"h-0350","chikara":"闇","jobs":["僧侶","パラ","スパ","踊り","天地","竜術","隠者"],"weapon":"","name":"パニパニハニーの技巧","effect":"成功率10%アップ","acquired":false},{"id":"h-0351","chikara":"闇","jobs":["僧侶","パラ","スパ","踊り","天地","竜術","隠者"],"weapon":"","name":"キラキラポーンの戦域","effect":"射程距離0.4mアップ","acquired":false},{"id":"h-0352","chikara":"闇","jobs":["僧侶"],"weapon":"","name":"ホップストリームの戦域","effect":"効果範囲0.5mアップ","acquired":false},{"id":"h-0353","chikara":"闇","jobs":["僧侶","パラ","スパ","踊り","天地","竜術","隠者"],"weapon":"","name":"スピリットゾーンの戦域","effect":"効果範囲0.3mアップ","acquired":false},{"id":"h-0354","chikara":"闇","jobs":["魔使","魔戦","賢者","天地","竜術"],"weapon":"","name":"悪魔ばらいの極意","effect":"悪魔系ダメージ20%アップ","acquired":false},{"id":"h-0355","chikara":"闇","jobs":["魔使","魔戦","賢者","天地","竜術"],"weapon":"","name":"果てなき早詠みの杖","effect":"効果時間 +3秒","acquired":false},{"id":"h-0356","chikara":"闇","jobs":["魔使","魔戦","賢者","天地","竜術"],"weapon":"","name":"しゅくふくの杖の奇跡","effect":"回復量10%アップ","acquired":false},{"id":"h-0357","chikara":"闇","jobs":["僧侶","武闘","パラ","どう","ガデ","スト"],"weapon":"","name":"狼牙突きの真髄","effect":"テンション時ダメージ20アップ","acquired":false},{"id":"h-0358","chikara":"闇","jobs":["僧侶","武闘","パラ","どう","ガデ","スト"],"weapon":"","name":"ジゴスパークの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0359","chikara":"闇","jobs":["僧侶","武闘","パラ","どう","ガデ","スト"],"weapon":"","name":"ジゴスパークの真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0360","chikara":"闇","jobs":["僧侶","武闘","パラ","どう","ガデ","スト"],"weapon":"","name":"超さみだれ突きの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0361","chikara":"闇","jobs":["戦士","レン","まも","デス","海賊"],"weapon":"","name":"蒼天魔斬の極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0362","chikara":"闇","jobs":["戦士","レン","まも","デス","海賊"],"weapon":"","name":"鉄甲斬系の極意","effect":"ダメージ8%アップ","acquired":false},{"id":"h-0363","chikara":"闇","jobs":["戦士","レン","まも","デス","海賊"],"weapon":"","name":"真・オノむそう系の真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0364","chikara":"闇","jobs":["戦士","レン","まも","デス","海賊"],"weapon":"","name":"降魔紅蓮斬の極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0365","chikara":"闇","jobs":["戦士","レン","まも","デス","海賊"],"weapon":"","name":"大地裂断系の極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0366","chikara":"闇","jobs":["僧侶","武闘","旅芸","占い","デス"],"weapon":"","name":"黄泉送りの極意","effect":"ゾンビ系ダメージ35%アップ","acquired":false},{"id":"h-0367","chikara":"闇","jobs":["占い"],"weapon":"","name":"占技・天輪殺の真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0368","chikara":"闇","jobs":["僧侶","武闘","旅芸","占い","デス"],"weapon":"","name":"断空なぎはらいの極意","effect":"ダメージ4%アップ","acquired":false},{"id":"h-0369","chikara":"闇","jobs":["武闘","盗賊","レン","まも"],"weapon":"","name":"必中拳の極意","effect":"ダメージ5%と会心率1%アップ","acquired":false},{"id":"h-0370","chikara":"闇","jobs":["武闘","盗賊","レン","まも"],"weapon":"","name":"タイガークローの真髄","effect":"テンション時ダメージ20アップ","acquired":false},{"id":"h-0371","chikara":"闇","jobs":["魔使","盗賊","スパ","まも","占い"],"weapon":"","name":"らせん打ちの極意","effect":"ダメージ8%アップ","acquired":false},{"id":"h-0372","chikara":"闇","jobs":["魔使","盗賊","スパ","まも","占い"],"weapon":"","name":"らせん打ちの技巧","effect":"成功率3%アップ","acquired":false},{"id":"h-0373","chikara":"闇","jobs":["魔使","盗賊","スパ","まも","占い"],"weapon":"","name":"愛のムチの極意","effect":"怪人系ダメージ35%アップ","acquired":false},{"id":"h-0374","chikara":"闇","jobs":["魔使","盗賊","スパ","まも","占い"],"weapon":"","name":"スパークショットの極意","effect":"ダメージ8%アップ","acquired":false},{"id":"h-0375","chikara":"闇","jobs":["魔使","盗賊","スパ","まも","占い"],"weapon":"","name":"スパークショットの技巧","effect":"成功率3%アップ","acquired":false},{"id":"h-0376","chikara":"闇","jobs":["魔使","盗賊","スパ","まも","占い"],"weapon":"","name":"しばり打ちの技巧","effect":"成功率2%アップ","acquired":false},{"id":"h-0377","chikara":"闇","jobs":["武闘","旅芸","賢者","スパ","踊り","天地","隠者","スト"],"weapon":"","name":"アゲハ乱舞系の極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0378","chikara":"闇","jobs":["武闘","旅芸","賢者","スパ","踊り","天地","隠者","スト"],"weapon":"","name":"ピンクタイフーンの極意","effect":"ダメージ6%アップ","acquired":false},{"id":"h-0379","chikara":"闇","jobs":["武闘","旅芸","賢者","スパ","踊り","天地","隠者","スト"],"weapon":"","name":"風斬りの舞の戦域","effect":"効果範囲0.5mアップ","acquired":false},{"id":"h-0380","chikara":"闇","jobs":["武闘","旅芸","賢者","スパ","踊り","天地","隠者","スト"],"weapon":"","name":"おうぎ乱舞系の極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0381","chikara":"闇","jobs":["盗賊","バト","パラ","どう","遊び"],"weapon":"","name":"シールドブレイクの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0382","chikara":"闇","jobs":["盗賊","バト","パラ","どう","遊び"],"weapon":"","name":"シールドブレイクの技巧","effect":"成功率10%アップ","acquired":false},{"id":"h-0383","chikara":"闇","jobs":["盗賊","バト","パラ","どう","遊び"],"weapon":"","name":"キャンセルショットの技巧","effect":"成功率2%アップ","acquired":false},{"id":"h-0384","chikara":"闇","jobs":["盗賊","バト","パラ","どう","遊び"],"weapon":"","name":"プレートインパクトの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0385","chikara":"闇","jobs":["盗賊","バト","パラ","どう","遊び"],"weapon":"","name":"デビルクラッシュの極意","effect":"ダメージ8%アップ","acquired":false},{"id":"h-0386","chikara":"闇","jobs":["旅芸","レン","賢者","どう","遊び","海賊","隠者"],"weapon":"","name":"シャインスコールの極意","effect":"ダメージ40%アップ","acquired":false},{"id":"h-0387","chikara":"闇","jobs":["旅芸","レン","賢者","どう","遊び","海賊","隠者"],"weapon":"","name":"デュアルカッターの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0388","chikara":"闇","jobs":["旅芸","レン","賢者","どう","遊び","海賊","隠者"],"weapon":"","name":"デュアルカッターの真髄","effect":"テンション時ダメージ20アップ","acquired":false},{"id":"h-0389","chikara":"闇","jobs":["旅芸","レン","賢者","どう","遊び","海賊","隠者"],"weapon":"","name":"レボルスライサーの極意","effect":"ダメージ3%アップ","acquired":false},{"id":"h-0390","chikara":"闇","jobs":["レン"],"weapon":"","name":"ギガシュートの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0391","chikara":"闇","jobs":["スパ","デス","魔剣","竜術"],"weapon":"","name":"果てなきハデスの宴","effect":"効果時間 +2秒","acquired":false},{"id":"h-0392","chikara":"闇","jobs":["スパ","デス","魔剣","竜術"],"weapon":"","name":"根絶やしの重撃の真髄","effect":"テンション時ダメージ50アップ","acquired":false},{"id":"h-0393","chikara":"闇","jobs":["共通"],"weapon":"","name":"石つぶての極意","effect":"ダメージ100%アップ","acquired":false},{"id":"h-0394","chikara":"闇","jobs":["共通"],"weapon":"","name":"かまいたちの極意","effect":"エレメント系ダメージ35%アップ","acquired":false},{"id":"h-0395","chikara":"闇","jobs":["共通"],"weapon":"","name":"せいけん突きの極意","effect":"ダメージ5%と会心率1%アップ","acquired":false},{"id":"h-0396","chikara":"闇","jobs":["共通"],"weapon":"","name":"ムーンサルトの極意","effect":"飛行の敵へのダメージ30%アップ","acquired":false},{"id":"h-0397","chikara":"闇","jobs":["共通"],"weapon":"","name":"ばくれつけんの極意","effect":"ダメージ6%アップ","acquired":false},{"id":"h-0398","chikara":"闇","jobs":["共通"],"weapon":"","name":"しんくうはの極意","effect":"ダメージ5%アップ","acquired":false},{"id":"h-0399","chikara":"闇","jobs":["共通"],"weapon":"","name":"ばくれつきゃくの極意","effect":"ダメージ2%アップ","acquired":false},{"id":"h-0400","chikara":"風","jobs":["共通"],"weapon":"","name":"奇跡の会心攻撃","effect":"ダメージ5アップ","acquired":false},{"id":"h-0401","chikara":"風","jobs":["共通"],"weapon":"","name":"打たれ名人","effect":"受けるダメージを2軽減","acquired":false},{"id":"h-0402","chikara":"風","jobs":["共通"],"weapon":"","name":"勝ちどきＭＰ回復","effect":"敵を倒すとＭＰを1回復","acquired":false},{"id":"h-0403","chikara":"風","jobs":["共通"],"weapon":"","name":"気まぐれな追撃","effect":"1%の確率で2回行動","acquired":false},{"id":"h-0404","chikara":"風","jobs":["共通"],"weapon":"","name":"復讐のテンションアップ","effect":"味方死亡時3%でテンションアップ","acquired":false},{"id":"h-0405","chikara":"風","jobs":["共通"],"weapon":"","name":"復讐のスカラ","effect":"味方死亡時3%でスカラ","acquired":false},{"id":"h-0406","chikara":"風","jobs":["共通"],"weapon":"","name":"復讐の早詠みの杖","effect":"味方死亡時3%で早詠みの杖","acquired":false},{"id":"h-0407","chikara":"風","jobs":["共通"],"weapon":"","name":"復讐の聖なる祈り","effect":"味方死亡時3%で聖なる祈り","acquired":false},{"id":"h-0408","chikara":"風","jobs":["共通"],"weapon":"","name":"復讐の聖女の守り","effect":"味方死亡時3%で聖女の守り","acquired":false},{"id":"h-0409","chikara":"風","jobs":["共通"],"weapon":"","name":"果てなき攻撃力アップ","effect":"攻撃力アップの効果時間 +2秒","acquired":false},{"id":"h-0410","chikara":"風","jobs":["共通"],"weapon":"","name":"果てなき守備力アップ","effect":"守備力アップの効果時間 +2秒","acquired":false},{"id":"h-0411","chikara":"風","jobs":["共通"],"weapon":"","name":"果てなき攻撃呪文威力アップ","effect":"攻撃呪文威力アップ時間 +2秒","acquired":false},{"id":"h-0412","chikara":"風","jobs":["共通"],"weapon":"","name":"果てなき回復呪文威力アップ","effect":"回復呪文の威力アップ時間 +2秒","acquired":false},{"id":"h-0413","chikara":"風","jobs":["共通"],"weapon":"","name":"共鳴のテンションアップ","effect":"1%でテンションリンク","acquired":false},{"id":"h-0414","chikara":"風","jobs":["共通"],"weapon":"","name":"禁断のＭＰアップ","effect":"最大ＨＰ -2＆最大ＭＰ +2","acquired":false},{"id":"h-0415","chikara":"風","jobs":["共通"],"weapon":"","name":"禁断のちからアップ","effect":"みのまもり -5＆ちから +1","acquired":false},{"id":"h-0416","chikara":"風","jobs":["共通"],"weapon":"","name":"禁断のおもさアップ","effect":"移動速度 -2%＆おもさ +1","acquired":false},{"id":"h-0417","chikara":"風","jobs":["共通"],"weapon":"","name":"禁断のこうげき魔力アップ","effect":"最大ＨＰ -3＆こうげき魔力 +1","acquired":false},{"id":"h-0418","chikara":"風","jobs":["共通"],"weapon":"","name":"禁断のかいふく魔力アップ","effect":"最大ＭＰ -3＆かいふく魔力 +2","acquired":false},{"id":"h-0419","chikara":"風","jobs":["共通"],"weapon":"","name":"禁断のＨＰアップ","effect":"最大ＭＰ -3＆最大ＨＰ +1","acquired":false},{"id":"h-0420","chikara":"風","jobs":["共通"],"weapon":"","name":"禁断のきようさアップ","effect":"すばやさ -3＆きようさ +3","acquired":false},{"id":"h-0421","chikara":"風","jobs":["共通"],"weapon":"","name":"始まりのヘナトス","effect":"開戦時2%でヘナトス","acquired":false},{"id":"h-0422","chikara":"風","jobs":["共通"],"weapon":"","name":"始まりのルカニ","effect":"開戦時2%でルカニ","acquired":false},{"id":"h-0423","chikara":"風","jobs":["共通"],"weapon":"","name":"始まりのボミエ","effect":"開戦時2%でボミエ","acquired":false},{"id":"h-0424","chikara":"風","jobs":["共通"],"weapon":"","name":"始まりのぶきみなひかり","effect":"開戦時2%でぶきみなひかり","acquired":false},{"id":"h-0425","chikara":"風","jobs":["共通"],"weapon":"","name":"始まりの重さダウン","effect":"開戦時2%で重さダウン","acquired":false},{"id":"h-0426","chikara":"風","jobs":["共通"],"weapon":"","name":"始まりのラリホー","effect":"開戦時2%でラリホー","acquired":false},{"id":"h-0427","chikara":"風","jobs":["共通"],"weapon":"","name":"始まりのチャージタイム短縮","effect":"開戦時2%チャージ時間 -10秒","acquired":false},{"id":"h-0428","chikara":"風","jobs":["共通"],"weapon":"","name":"始まりのバイシオン","effect":"開戦時2%でバイシオン","acquired":false},{"id":"h-0429","chikara":"風","jobs":["共通"],"weapon":"","name":"始まりの聖女の守り","effect":"開戦時2%で聖女の守り","acquired":false},{"id":"h-0430","chikara":"風","jobs":["共通"],"weapon":"","name":"始まりのキラキラポーン","effect":"開戦時2%でキラキラポーン","acquired":false},{"id":"h-0431","chikara":"風","jobs":["共通"],"weapon":"","name":"始まりの移動速度アップ","effect":"開戦時1%で移動速度アップ","acquired":false},{"id":"h-0432","chikara":"風","jobs":["共通"],"weapon":"","name":"始まりのＨＰアップ","effect":"開戦時2%でＨＰ +50","acquired":false},{"id":"h-0433","chikara":"風","jobs":["共通"],"weapon":"","name":"終わりのＨＰ回復","effect":"戦闘終了時ＨＰを20回復","acquired":false},{"id":"h-0434","chikara":"風","jobs":["魔使","踊り"],"weapon":"","name":"メラ系呪文の瞬き","effect":"詠唱速度 +2%","acquired":false},{"id":"h-0435","chikara":"風","jobs":["魔使","賢者"],"weapon":"","name":"イオ系呪文の瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0436","chikara":"風","jobs":["僧侶","旅芸","スパ","海賊"],"weapon":"","name":"バギ系呪文の瞬き","effect":"詠唱速度 +4%","acquired":false},{"id":"h-0437","chikara":"風","jobs":["踊り","デス"],"weapon":"","name":"ギラ系呪文の瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0438","chikara":"風","jobs":["竜術"],"weapon":"","name":"ドガン系呪文の瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0439","chikara":"風","jobs":["魔戦"],"weapon":"","name":"マダンテの瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0440","chikara":"風","jobs":["魔使","魔戦","踊り","天地","デス","海賊"],"weapon":"","name":"マホトラの瞬き","effect":"詠唱速度 +4%","acquired":false},{"id":"h-0441","chikara":"風","jobs":["僧侶","盗賊","旅芸","パラ","レン","賢者","スパ","デス","ガデ","隠者"],"weapon":"","name":"ホイミ系呪文の瞬き","effect":"詠唱速度 +2%","acquired":false},{"id":"h-0442","chikara":"風","jobs":["僧侶","旅芸","レン","賢者","デス","隠者"],"weapon":"","name":"ザオの瞬き","effect":"詠唱速度 +5%","acquired":false},{"id":"h-0443","chikara":"風","jobs":["僧侶","旅芸","レン","賢者","スパ","デス","隠者"],"weapon":"","name":"ザオラルの瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0444","chikara":"風","jobs":["旅芸","魔戦","レン","どう","魔剣"],"weapon":"","name":"バイキルト系呪文の瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0445","chikara":"風","jobs":["僧侶","パラ","どう","ガデ","隠者"],"weapon":"","name":"スカラ系呪文の瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0446","chikara":"風","jobs":["僧侶","レン","隠者"],"weapon":"","name":"フバーハ系呪文の瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0447","chikara":"風","jobs":["どう","天地"],"weapon":"","name":"マジックバリアの瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0448","chikara":"風","jobs":["僧侶","天地","隠者"],"weapon":"","name":"ズッシードの瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0449","chikara":"風","jobs":["魔使","スパ"],"weapon":"","name":"マホカンタ系呪文の瞬き","effect":"詠唱速度 +4%","acquired":false},{"id":"h-0450","chikara":"風","jobs":["魔戦"],"weapon":"","name":"マホキテの瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0451","chikara":"風","jobs":["魔使"],"weapon":"","name":"ヘナトス系の瞬き","effect":"詠唱速度 +2%","acquired":false},{"id":"h-0452","chikara":"風","jobs":["旅芸","海賊"],"weapon":"","name":"ルカニ系呪文の瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0453","chikara":"風","jobs":["盗賊"],"weapon":"","name":"ボミエ系呪文の瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0454","chikara":"風","jobs":["どう"],"weapon":"","name":"ディバインスペルの瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0455","chikara":"風","jobs":["魔使","スパ","どう"],"weapon":"","name":"ラリホー系呪文の瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0456","chikara":"風","jobs":["盗賊","スパ"],"weapon":"","name":"メダパニ系呪文の瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0457","chikara":"風","jobs":["魔使","天地"],"weapon":"","name":"マホトーンの瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0458","chikara":"風","jobs":["レン"],"weapon":"","name":"マヌーサの瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0459","chikara":"風","jobs":["魔使"],"weapon":"","name":"ヴェレ系の瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0460","chikara":"風","jobs":["共通"],"weapon":"","name":"復讐のバイシオン","effect":"味方死亡時3%でバイシオン","acquired":false},{"id":"h-0461","chikara":"風","jobs":["共通"],"weapon":"","name":"復讐の攻撃呪文威力アップ","effect":"味方死亡時3%攻撃呪文威力アップ","acquired":false},{"id":"h-0462","chikara":"風","jobs":["共通"],"weapon":"","name":"復讐の呪文耐性上昇","effect":"味方死亡時3%で呪文耐性上昇","acquired":false},{"id":"h-0463","chikara":"風","jobs":["共通"],"weapon":"","name":"復讐のブレス耐性上昇","effect":"味方死亡時3%でブレス耐性上昇","acquired":false},{"id":"h-0464","chikara":"風","jobs":["共通"],"weapon":"","name":"果てなき聖女の守り","effect":"聖女の守りの効果時間 +2秒","acquired":false},{"id":"h-0465","chikara":"風","jobs":["魔使","旅芸","デス"],"weapon":"","name":"ヒャド系呪文の瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0466","chikara":"風","jobs":["賢者","魔剣"],"weapon":"","name":"ドルマ系呪文の瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0467","chikara":"風","jobs":["盗賊","レン","竜術"],"weapon":"","name":"ジバ系呪文の瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0468","chikara":"風","jobs":["賢者","天地","隠者"],"weapon":"","name":"ザオリクの瞬き","effect":"詠唱速度 +4%","acquired":false},{"id":"h-0469","chikara":"風","jobs":["盗賊","魔戦","どう","天地","海賊"],"weapon":"","name":"ピオラ系呪文の瞬き","effect":"詠唱速度 +3%","acquired":false},{"id":"h-0470","chikara":"水","jobs":["共通"],"weapon":"","name":"ルカニの盾","effect":"ガード時4%でルカニ","acquired":false},{"id":"h-0471","chikara":"水","jobs":["共通"],"weapon":"","name":"ヘナトスの盾","effect":"ガード時4%でヘナトス","acquired":false},{"id":"h-0472","chikara":"水","jobs":["共通"],"weapon":"","name":"ぶきみなひかりの盾","effect":"ガード時4%でぶきみなひかり","acquired":false},{"id":"h-0473","chikara":"水","jobs":["共通"],"weapon":"","name":"不滅のテンション","effect":"死亡時3%でテンションが残る","acquired":false},{"id":"h-0474","chikara":"水","jobs":["共通"],"weapon":"","name":"不滅の攻撃力アップ","effect":"死亡時3%で攻撃力アップ残り","acquired":false},{"id":"h-0475","chikara":"水","jobs":["共通"],"weapon":"","name":"不滅の攻撃呪文強化","effect":"死亡時5%呪文威力アップ残り","acquired":false},{"id":"h-0476","chikara":"水","jobs":["共通"],"weapon":"","name":"不滅の回復呪文強化","effect":"死亡時3%呪文回復アップ残り","acquired":false},{"id":"h-0477","chikara":"水","jobs":["共通"],"weapon":"","name":"不滅の早詠み","effect":"死亡時5%早詠み残り","acquired":false},{"id":"h-0478","chikara":"水","jobs":["占い"],"weapon":"","name":"不滅の魅惑の水晶球","effect":"死亡時5%魅惑の水晶球残り","acquired":false},{"id":"h-0479","chikara":"水","jobs":["共通"],"weapon":"","name":"復活のＨＰ回復量アップ","effect":"蘇生時のＨＰ回復量が1%アップ","acquired":false},{"id":"h-0480","chikara":"水","jobs":["共通"],"weapon":"","name":"忍耐のＭＰ回復","effect":"3%で被ダメージの1%ＭＰ回復","acquired":false},{"id":"h-0481","chikara":"水","jobs":["共通"],"weapon":"","name":"逆境の身かわしアップ","effect":"瀕死時3%で身かわし率 +30%","acquired":false},{"id":"h-0482","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁のマヒガード","effect":"マヒガード +2%","acquired":false},{"id":"h-0483","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁の眠りガード","effect":"眠りガード +2%","acquired":false},{"id":"h-0484","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁の混乱ガード","effect":"混乱ガード +2%","acquired":false},{"id":"h-0485","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁の即死ガード","effect":"即死ガード +2%","acquired":false},{"id":"h-0486","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁のどくガード","effect":"どくガード +2%","acquired":false},{"id":"h-0487","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁の封印ガード","effect":"封印ガード +2%","acquired":false},{"id":"h-0488","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁の幻惑ガード","effect":"幻惑ガード +2%","acquired":false},{"id":"h-0489","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁の転びガード","effect":"転びガード +2%","acquired":false},{"id":"h-0490","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁のおびえガード","effect":"おびえガード +2%","acquired":false},{"id":"h-0491","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁のしばりガード","effect":"しばりガード +2%","acquired":false},{"id":"h-0492","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁の踊りガード","effect":"踊らされガード +2%","acquired":false},{"id":"h-0493","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁の笑いガード","effect":"笑いガード +2%","acquired":false},{"id":"h-0494","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁の魅了ガード","effect":"魅了ガード +2%","acquired":false},{"id":"h-0495","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁の呪いガード","effect":"呪いガード +2%","acquired":false},{"id":"h-0496","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁のＭＰ吸収ガード","effect":"ＭＰ吸収ガード +2%","acquired":false},{"id":"h-0497","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁のみとれガード","effect":"みとれガード +2%","acquired":false},{"id":"h-0498","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁のはどうガード","effect":"いてつくはどうガード +2%","acquired":false},{"id":"h-0499","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁の会心完全ガード","effect":"会心完全ガード +2%","acquired":false},{"id":"h-0500","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁のふっとびガード","effect":"ふっとびガード +2%","acquired":false},{"id":"h-0501","chikara":"水","jobs":["共通"],"weapon":"","name":"鉄壁の各弱体系耐性","effect":"各弱体系耐性 +2%","acquired":false},{"id":"h-0502","chikara":"水","jobs":["僧侶","盗賊","旅芸","パラ","レン","賢者","スパ","デス","ガデ","隠者"],"weapon":"","name":"ホイミ系呪文の奇跡","effect":"回復量2%アップ","acquired":false},{"id":"h-0503","chikara":"水","jobs":["僧侶","旅芸","レン","賢者","デス","隠者"],"weapon":"","name":"ザオの戦域","effect":"射程距離0.5mアップ","acquired":false},{"id":"h-0504","chikara":"水","jobs":["僧侶","旅芸","レン","賢者","スパ","天地","デス","隠者"],"weapon":"","name":"ザオラルとザオリクの戦域","effect":"射程距離0.2mアップ","acquired":false},{"id":"h-0505","chikara":"水","jobs":["魔使"],"weapon":"","name":"ヘナトス系の技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0506","chikara":"水","jobs":["旅芸","海賊"],"weapon":"","name":"ルカニ系呪文の技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0507","chikara":"水","jobs":["盗賊"],"weapon":"","name":"ボミエ系呪文の技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0508","chikara":"水","jobs":["どう"],"weapon":"","name":"ディバインスペルの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0509","chikara":"水","jobs":["魔使","スパ","どう"],"weapon":"","name":"ラリホー系呪文の技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0510","chikara":"水","jobs":["盗賊","スパ"],"weapon":"","name":"メダパニ系呪文の技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0511","chikara":"水","jobs":["魔使","天地"],"weapon":"","name":"マホトーンの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0512","chikara":"水","jobs":["レン"],"weapon":"","name":"マヌーサの技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0513","chikara":"水","jobs":["魔使"],"weapon":"","name":"ヴェレ系の技巧","effect":"成功率5%アップ","acquired":false},{"id":"h-0514","chikara":"水","jobs":["魔使"],"weapon":"","name":"不滅の呪文ダメージ限界突破","effect":"死亡時5%呪文限界突破残り","acquired":false},{"id":"h-0515","chikara":"炎","jobs":["共通"],"weapon":"","name":"不屈の闘志","effect":"さいだいＨＰ +2","acquired":false},{"id":"h-0516","chikara":"炎","jobs":["共通"],"weapon":"","name":"深淵なる叡智","effect":"さいだいＭＰ +5","acquired":false},{"id":"h-0517","chikara":"炎","jobs":["共通"],"weapon":"","name":"武神の豪腕","effect":"ちから +1","acquired":false},{"id":"h-0518","chikara":"炎","jobs":["共通"],"weapon":"","name":"鋼鉄の肉体","effect":"みのまもり +5","acquired":false},{"id":"h-0519","chikara":"炎","jobs":["共通"],"weapon":"","name":"大賢者の御手","effect":"こうげき魔力 +3","acquired":false},{"id":"h-0520","chikara":"炎","jobs":["共通"],"weapon":"","name":"いつくしむ心","effect":"かいふく魔力 +3","acquired":false},{"id":"h-0521","chikara":"炎","jobs":["共通"],"weapon":"","name":"韋駄天の足","effect":"すばやさ +5","acquired":false},{"id":"h-0522","chikara":"炎","jobs":["共通"],"weapon":"","name":"神業の手","effect":"きようさ +5","acquired":false},{"id":"h-0523","chikara":"炎","jobs":["共通"],"weapon":"","name":"ふんばり魂","effect":"おもさ +2","acquired":false},{"id":"h-0524","chikara":"炎","jobs":["共通"],"weapon":"","name":"戦場のヴィーナス","effect":"みりょく +3","acquired":false},{"id":"h-0525","chikara":"炎","jobs":["共通"],"weapon":"","name":"魔術の深淵","effect":"攻撃魔力 +2＆回復魔力 +2","acquired":false},{"id":"h-0526","chikara":"炎","jobs":["共通"],"weapon":"","name":"会心練磨","effect":"会心率と呪文暴走率 +0.2%","acquired":false},{"id":"h-0527","chikara":"炎","jobs":["共通"],"weapon":"","name":"先見の眼","effect":"身かわし率 +0.2%","acquired":false},{"id":"h-0528","chikara":"炎","jobs":["共通"],"weapon":"","name":"堅守の心得","effect":"盾ガード率 +0.2%","acquired":false},{"id":"h-0529","chikara":"炎","jobs":["共通"],"weapon":"","name":"鉄壁の炎耐性","effect":"炎ダメージ 1%減","acquired":false},{"id":"h-0530","chikara":"炎","jobs":["共通"],"weapon":"","name":"鉄壁の氷耐性","effect":"氷ダメージ 1%減","acquired":false},{"id":"h-0531","chikara":"炎","jobs":["共通"],"weapon":"","name":"鉄壁の風耐性","effect":"風ダメージ 1%減","acquired":false},{"id":"h-0532","chikara":"炎","jobs":["共通"],"weapon":"","name":"鉄壁の雷耐性","effect":"雷ダメージ 1%減","acquired":false},{"id":"h-0533","chikara":"炎","jobs":["共通"],"weapon":"","name":"鉄壁の土耐性","effect":"土ダメージ 1%減","acquired":false},{"id":"h-0534","chikara":"炎","jobs":["共通"],"weapon":"","name":"鉄壁の闇耐性","effect":"闇ダメージ 1%減","acquired":false},{"id":"h-0535","chikara":"炎","jobs":["共通"],"weapon":"","name":"鉄壁の光耐性","effect":"光ダメージ 1%減","acquired":false},{"id":"h-0536","chikara":"炎","jobs":["共通"],"weapon":"","name":"鉄壁の攻撃呪文耐性","effect":"呪文ダメージ 1%減","acquired":false},{"id":"h-0537","chikara":"炎","jobs":["共通"],"weapon":"","name":"鉄壁のブレス耐性","effect":"ブレスダメージ 1%減","acquired":false}];
+
+function uid(){return 'h-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,7);}
+function charId(){return 'c-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,7);}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+function getActiveChar(){
+  return state.characters.find(c=>c.id===state.activeCharId) || state.characters[0];
+}
+function getActiveList(){
+  const c = getActiveChar();
+  return c ? c.list : [];
+}
+function setActiveList(list){
+  const c = getActiveChar();
+  if(c) c.list = list;
+}
+
+function storageAvailable(){
+  try{
+    const testKey = '__dqx_storage_test__';
+    localStorage.setItem(testKey, '1');
+    localStorage.removeItem(testKey);
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+async function loadState(){
+  if(!storageAvailable()){
+    toast('このブラウザでは保存機能が使えません（プライベートモード等をご確認ください）');
+    const c = {id: charId(), name: 'キャラクター1', list: OFFICIAL_HOUJU_DATA.map(x=>({...x, jobs:[...x.jobs]}))};
+    state = {activeCharId: c.id, characters: [c]};
+    render();
+    return;
+  }
+
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      state = JSON.parse(raw);
+      if(!state.characters || state.characters.length===0) throw new Error('empty');
+      render();
+      return;
+    }
+  }catch(e){ /* fall through to migration / default */ }
+
+  // 旧形式（キャラ管理なし）のデータがあれば移行する
+  try{
+    const oldRaw = localStorage.getItem(OLD_STORAGE_KEY);
+    if(oldRaw){
+      const oldList = JSON.parse(oldRaw);
+      const c = {id: charId(), name: 'キャラクター1', list: Array.isArray(oldList) ? oldList : []};
+      state = {activeCharId: c.id, characters: [c]};
+      saveState(true);
+      render();
+      return;
+    }
+  }catch(e){ /* no old data */ }
+
+  // 初回起動：公式データ入りのキャラクターを1人作成
+  const c = {id: charId(), name: 'キャラクター1', list: OFFICIAL_HOUJU_DATA.map(x=>({...x, jobs:[...x.jobs]}))};
+  state = {activeCharId: c.id, characters: [c]};
+  saveState(true);
+  render();
+}
+
+async function saveState(silent){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if(!silent) toast('保存しました');
+  }catch(e){
+    toast('保存に失敗しました（ブラウザの空き容量やプライベートモードをご確認ください）');
+  }
+}
+
+function renderCharacterSelect(){
+  const sel = document.getElementById('charSelect');
+  sel.innerHTML = state.characters.map(c=>{
+    const total = c.list.length;
+    const done = c.list.filter(x=>x.acquired).length;
+    return `<option value="${escapeHtml(c.id)}" ${c.id===state.activeCharId?'selected':''}>${escapeHtml(c.name)}（${done}/${total}）</option>`;
+  }).join('');
+}
+
+function buildJobOptions(){
+  const jobSelect = document.getElementById('filterJob');
+  const known = new Set(JOBS);
+  getActiveList().forEach(d=>{ (d.jobs||[]).forEach(j=>{ if(j) known.add(j); }); });
+  const jobs = Array.from(known);
+  const currentValue = jobSelect.value;
+  jobSelect.innerHTML = '<option value="">職業：すべて</option>' + jobs.map(j=>`<option value="${escapeHtml(j)}">${escapeHtml(j)}</option>`).join('');
+  if(jobs.includes(currentValue)) jobSelect.value = currentValue;
+}
+
+function buildWeaponOptions(){
+  const weaponSelect = document.getElementById('filterWeapon');
+  const known = new Set(WEAPONS);
+  getActiveList().forEach(d=>{ if(d.weapon) known.add(d.weapon); });
+  const weapons = Array.from(known);
+  const currentValue = weaponSelect.value;
+  weaponSelect.innerHTML = '<option value="">武器種：すべて</option>' + weapons.map(w=>`<option value="${escapeHtml(w)}">${escapeHtml(w)}</option>`).join('');
+  if(weapons.includes(currentValue)) weaponSelect.value = currentValue;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function buildTabs(){
+  const tabsEl = document.getElementById('tabs');
+  const data = getActiveList();
+  const all = [{name:'すべて', color:'var(--gold)'}].concat(ELEMENTS.map(e=>({name:e,color:ELEMENT_COLOR[e]})));
+  tabsEl.innerHTML = all.map(t=>{
+    const list = t.name==='すべて' ? data : data.filter(d=>d.chikara===t.name);
+    const total = list.length;
+    const done = list.filter(d=>d.acquired).length;
+    const pct = total ? Math.round(done/total*100) : 0;
+    return `<div class="tab ${activeElement===t.name?'active':''}" style="--tab-color:${t.color}" data-el="${escapeHtml(t.name)}">
+      <div class="gem"></div>
+      <div class="name">${escapeHtml(t.name)}</div>
+      <div class="count">${done} / ${total}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+  tabsEl.querySelectorAll('.tab').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      activeElement = el.dataset.el;
+      render();
+    });
+  });
+}
+
+function getFiltered(){
+  const job = document.getElementById('filterJob').value;
+  const weapon = document.getElementById('filterWeapon').value;
+  const status = document.getElementById('filterStatus').value;
+  const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+  return getActiveList().filter(d=>{
+    if(activeElement!=='すべて' && d.chikara!==activeElement) return false;
+    if(job && !(d.jobs||[]).includes(job)) return false;
+    if(weapon && (d.weapon||'')!==weapon) return false;
+    if(status==='done' && !d.acquired) return false;
+    if(status==='todo' && d.acquired) return false;
+    if(keyword){
+      const hay = (d.name+' '+d.effect+' '+(d.jobs||[]).join(' ')+' '+(d.weapon||'')).toLowerCase();
+      if(!hay.includes(keyword)) return false;
+    }
+    return true;
+  });
+}
+
+function renderTable(){
+  const tbody = document.getElementById('tbody');
+  const list = getFiltered();
+  if(list.length===0){
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="6">該当する宝珠がありません。フィルターの条件を見直してください。</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(d=>`
+    <tr class="${d.acquired?'acquired':''}" data-id="${d.id}">
+      <td class="checkbox-cell" data-label="取得"><input type="checkbox" ${d.acquired?'checked':''} class="chk-acquired"></td>
+      <td data-label="ちから"><span class="badge" style="--badge-color:${ELEMENT_COLOR[d.chikara]||'var(--gold)'}">${escapeHtml(d.chikara)}</span></td>
+      <td class="job-cell" data-label="職業">${escapeHtml((d.jobs&&d.jobs.length)?d.jobs.join(' / '):'-')}</td>
+      <td class="weapon-cell" data-label="武器種">${escapeHtml(d.weapon || '（未設定）')}</td>
+      <td class="name-cell" data-label="宝珠名">${escapeHtml(d.name)}</td>
+      <td class="effect-cell" data-label="効果">${escapeHtml(d.effect||'-')}</td>
+    </tr>
+  `).join('');
+
+  tbody.querySelectorAll('.chk-acquired').forEach(cb=>{
+    cb.addEventListener('change', async (e)=>{
+      const tr = e.target.closest('tr');
+      const id = tr.dataset.id;
+      const item = getActiveList().find(x=>x.id===id);
+      if(item){
+        item.acquired = e.target.checked;
+        await saveState(true);
+        render();
+      }
+    });
+  });
+  // 行のどこをクリックしても取得チェックをON/OFFできるようにする
+  // （チェックボックス自体をクリックした場合はそちらの操作を優先する）
+  tbody.querySelectorAll('tr[data-id]').forEach(tr=>{
+    tr.addEventListener('click', async (e)=>{
+      if(e.target.closest('.chk-acquired')) return;
+      const id = tr.dataset.id;
+      const item = getActiveList().find(x=>x.id===id);
+      if(item){
+        item.acquired = !item.acquired;
+        await saveState(true);
+        render();
+      }
+    });
+  });
+}
+
+function renderStats(){
+  const data = getActiveList();
+  const total = data.length;
+  const done = data.filter(d=>d.acquired).length;
+  const pct = total ? Math.round(done/total*100) : 0;
+
+  document.getElementById('overallPercent').textContent = pct + '%';
+  document.getElementById('overallCount').textContent = `${done} / ${total} 取得`;
+  const circumference = 163.36;
+  document.getElementById('ringFill').style.strokeDashoffset = (circumference - circumference*pct/100).toFixed(2);
+
+  const footer = document.getElementById('statsFooter');
+  footer.innerHTML = ELEMENTS.map(e=>{
+    const list = data.filter(d=>d.chikara===e);
+    const t = list.length, d2 = list.filter(x=>x.acquired).length;
+    return `<span>${e}：${d2}/${t}</span>`;
+  }).join('');
+}
+
+function render(){
+  renderCharacterSelect();
+  buildTabs();
+  renderTable();
+  renderStats();
+  if(currentPage==='jobStats') renderJobStatsChart();
+  if(currentPage==='weaponStats') renderWeaponStatsChart();
+}
+
+let currentPage = 'main';
+
+function showPage(page){
+  currentPage = page;
+  document.getElementById('pageMain').style.display = (page==='main') ? 'block' : 'none';
+  document.getElementById('pageJobStats').style.display = (page==='jobStats') ? 'block' : 'none';
+  document.getElementById('pageWeaponStats').style.display = (page==='weaponStats') ? 'block' : 'none';
+  document.getElementById('pageShare').style.display = (page==='share') ? 'block' : 'none';
+  document.querySelectorAll('.page-nav-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.page===page);
+  });
+  if(page==='jobStats') renderJobStatsChart();
+  if(page==='weaponStats') renderWeaponStatsChart();
+  if(page==='share') buildShareCharSelects();
+}
+
+document.querySelectorAll('.page-nav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> showPage(btn.dataset.page));
+});
+
+function statRowHtml(label, done, total){
+  const pct = total ? Math.round(done/total*100) : 0;
+  return `<div class="stat-row">
+    <div class="stat-label" title="${escapeHtml(label)}">${escapeHtml(label)}</div>
+    <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${pct}%"></div></div>
+    <div class="stat-count">${done} / ${total}（${pct}%）</div>
+  </div>`;
+}
+
+function renderJobStatsChart(){
+  const container = document.getElementById('jobStatsChart');
+  const list = getActiveList();
+  const known = new Set(JOBS);
+  list.forEach(d=>{ (d.jobs||[]).forEach(j=>{ if(j) known.add(j); }); });
+  const jobs = Array.from(known);
+  if(jobs.length===0 || list.length===0){
+    container.innerHTML = `<div class="stat-empty">表示できるデータがありません。</div>`;
+    return;
+  }
+  container.innerHTML = jobs.map(job=>{
+    const targets = list.filter(d=>(d.jobs||[]).includes(job));
+    const done = targets.filter(d=>d.acquired).length;
+    return statRowHtml(job, done, targets.length);
+  }).join('');
+}
+
+function renderWeaponStatsChart(){
+  const container = document.getElementById('weaponStatsChart');
+  const list = getActiveList();
+  const known = new Set(WEAPONS);
+  list.forEach(d=>{ if(d.weapon) known.add(d.weapon); });
+  const weapons = Array.from(known);
+  if(list.length===0){
+    container.innerHTML = `<div class="stat-empty">表示できるデータがありません。</div>`;
+    return;
+  }
+  const rows = weapons.map(w=>{
+    const targets = list.filter(d=>(d.weapon||'')===w);
+    const done = targets.filter(d=>d.acquired).length;
+    return {label:w, done, total:targets.length};
+  }).filter(r=>r.total>0);
+
+  const unsetTargets = list.filter(d=>!d.weapon);
+  if(unsetTargets.length>0){
+    rows.push({label:'（未設定）', done: unsetTargets.filter(d=>d.acquired).length, total: unsetTargets.length});
+  }
+
+  if(rows.length===0){
+    container.innerHTML = `<div class="stat-empty">表示できるデータがありません。</div>`;
+    return;
+  }
+  container.innerHTML = rows.map(r=>statRowHtml(r.label, r.done, r.total)).join('');
+}
+
+document.getElementById('filterJob').addEventListener('change', render);
+document.getElementById('filterWeapon').addEventListener('change', render);
+document.getElementById('filterStatus').addEventListener('change', render);
+document.getElementById('searchInput').addEventListener('input', render);
+
+document.getElementById('btnMarkAllDone').addEventListener('click', async ()=>{
+  const filtered = getFiltered();
+  if(filtered.length===0){ toast('対象の宝珠がありません'); return; }
+  if(!confirm(`現在表示中の ${filtered.length} 件をすべて取得済みにします。よろしいですか？`)) return;
+  filtered.forEach(item=>{ item.acquired = true; });
+  await saveState();
+  render();
+  toast(`${filtered.length} 件を取得済みにしました`);
+});
+
+document.getElementById('btnMarkAllUndone').addEventListener('click', async ()=>{
+  const filtered = getFiltered();
+  if(filtered.length===0){ toast('対象の宝珠がありません'); return; }
+  if(!confirm(`現在表示中の ${filtered.length} 件をすべて未取得に戻します。よろしいですか？`)) return;
+  filtered.forEach(item=>{ item.acquired = false; });
+  await saveState();
+  render();
+  toast(`${filtered.length} 件を未取得に戻しました`);
+});
+
+// ---- キャラクター管理 ----
+document.getElementById('charSelect').addEventListener('change', (e)=>{
+  state.activeCharId = e.target.value;
+  activeElement = 'すべて';
+  buildJobOptions();
+  buildWeaponOptions();
+  render();
+});
+
+document.getElementById('btnCharAdd').addEventListener('click', async ()=>{
+  const name = prompt('新しいキャラクター名を入力してください', '新しいキャラクター');
+  if(!name || !name.trim()) return;
+  const c = {id: charId(), name: name.trim(), list: OFFICIAL_HOUJU_DATA.map(x=>({...x, jobs:[...x.jobs]}))};
+  state.characters.push(c);
+  state.activeCharId = c.id;
+  await saveState();
+  buildJobOptions();
+  buildWeaponOptions();
+  render();
+  toast(`「${c.name}」を追加しました`);
+});
+
+document.getElementById('btnCharRename').addEventListener('click', async ()=>{
+  const c = getActiveChar();
+  if(!c) return;
+  const name = prompt('新しい名前を入力してください', c.name);
+  if(!name || !name.trim()) return;
+  c.name = name.trim();
+  await saveState();
+  render();
+  toast('名前を変更しました');
+});
+
+document.getElementById('btnCharDelete').addEventListener('click', async ()=>{
+  if(state.characters.length<=1){
+    toast('最後の1人は削除できません');
+    return;
+  }
+  const c = getActiveChar();
+  if(!c) return;
+  if(!confirm(`「${c.name}」を削除しますか？このキャラクターの宝珠データも削除されます。`)) return;
+  state.characters = state.characters.filter(x=>x.id!==c.id);
+  state.activeCharId = state.characters[0].id;
+  await saveState();
+  buildJobOptions();
+  buildWeaponOptions();
+  render();
+  toast('削除しました');
+});
+
+document.getElementById('btnReloadOfficial').addEventListener('click', async ()=>{
+  const c = getActiveChar();
+  if(!c) return;
+  if(!confirm(`「${c.name}」のデータを、公式の宝珠一覧（${OFFICIAL_HOUJU_DATA.length}件）で上書きします。現在の取得チェックはリセットされます。よろしいですか？`)) return;
+  c.list = OFFICIAL_HOUJU_DATA.map(x=>({...x, jobs:[...x.jobs]}));
+  await saveState();
+  buildJobOptions();
+  buildWeaponOptions();
+  render();
+  toast(`公式データ（${OFFICIAL_HOUJU_DATA.length}件）を読み込みました`);
+});
+
+// ---- 共有コードの作成・比較 ----
+const SHARE_CODE_PREFIX = 'DQXHOJU1:';
+const SHARE_XOR_KEY = 'dqx-houju-share-v1'; // 簡易的な符号化用の固定キー（強固な暗号ではありません）
+
+function itemKey(item){
+  return item.chikara + '::' + item.name;
+}
+
+function xorBytes(bytes, keyStr){
+  const keyBytes = new TextEncoder().encode(keyStr);
+  const out = new Uint8Array(bytes.length);
+  for(let i=0;i<bytes.length;i++){
+    out[i] = bytes[i] ^ keyBytes[i % keyBytes.length];
+  }
+  return out;
+}
+
+function encodeShareCode(character){
+  const acquiredKeys = character.list.filter(x=>x.acquired).map(itemKey);
+  const payload = {v:1, n: character.name, a: acquiredKeys};
+  const json = JSON.stringify(payload);
+  const bytes = new TextEncoder().encode(json);
+  const xored = xorBytes(bytes, SHARE_XOR_KEY);
+  let binary = '';
+  xored.forEach(b=>{ binary += String.fromCharCode(b); });
+  return SHARE_CODE_PREFIX + btoa(binary);
+}
+
+function decodeShareCode(code){
+  const trimmed = (code||'').trim();
+  if(!trimmed.startsWith(SHARE_CODE_PREFIX)){
+    throw new Error('コードの形式が正しくありません（先頭の文字列が一致しません）');
+  }
+  const b64 = trimmed.slice(SHARE_CODE_PREFIX.length).trim();
+  let binary;
+  try{
+    binary = atob(b64);
+  }catch(e){
+    throw new Error('コードを読み込めませんでした。コピーし忘れや余分な文字がないか確認してください。');
+  }
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+  const xored = xorBytes(bytes, SHARE_XOR_KEY);
+  let json;
+  try{
+    json = new TextDecoder().decode(xored);
+  }catch(e){
+    throw new Error('コードの内容を読み取れませんでした。');
+  }
+  let payload;
+  try{
+    payload = JSON.parse(json);
+  }catch(e){
+    throw new Error('コードの内容が壊れています。');
+  }
+  if(!payload || !Array.isArray(payload.a)){
+    throw new Error('コードの内容が正しくありません。');
+  }
+  return payload;
+}
+
+function buildShareCharSelects(){
+  ['shareCharSelect','compareCharSelect'].forEach(id=>{
+    const sel = document.getElementById(id);
+    const currentValue = sel.value;
+    sel.innerHTML = state.characters.map(c=>{
+      const total = c.list.length;
+      const done = c.list.filter(x=>x.acquired).length;
+      return `<option value="${escapeHtml(c.id)}">${escapeHtml(c.name)}（${done}/${total}）</option>`;
+    }).join('');
+    const ids = state.characters.map(c=>c.id);
+    sel.value = ids.includes(currentValue) ? currentValue : (state.activeCharId || (ids[0]||''));
+  });
+}
+
+document.getElementById('btnGenerateShareCode').addEventListener('click', ()=>{
+  const id = document.getElementById('shareCharSelect').value;
+  const c = state.characters.find(x=>x.id===id);
+  if(!c){ toast('キャラクターが見つかりません'); return; }
+  const code = encodeShareCode(c);
+  document.getElementById('shareCodeOutput').value = code;
+  toast('共有コードを作成しました');
+});
+
+document.getElementById('btnCopyShareCode').addEventListener('click', async ()=>{
+  const output = document.getElementById('shareCodeOutput');
+  if(!output.value){ toast('先にコードを作成してください'); return; }
+  try{
+    await navigator.clipboard.writeText(output.value);
+    toast('コピーしました');
+  }catch(e){
+    output.select();
+    toast('自動コピーに失敗しました。手動で選択してコピーしてください');
+  }
+});
+
+document.getElementById('btnCompareShareCode').addEventListener('click', ()=>{
+  const raw = document.getElementById('shareCodeInput').value;
+  const metaEl = document.getElementById('compareResultMeta');
+  const listEl = document.getElementById('compareResultList');
+  let payload;
+  try{
+    payload = decodeShareCode(raw);
+  }catch(e){
+    metaEl.textContent = '';
+    listEl.innerHTML = `<div class="stat-empty">${escapeHtml(e.message || 'コードを読み込めませんでした')}</div>`;
+    return;
+  }
+  const ownId = document.getElementById('compareCharSelect').value;
+  const ownChar = state.characters.find(x=>x.id===ownId);
+  if(!ownChar){
+    metaEl.textContent = '';
+    listEl.innerHTML = `<div class="stat-empty">比較する自分のキャラクターを選んでください</div>`;
+    return;
+  }
+
+  const otherAcquired = new Set(payload.a);
+  const bothMissing = ownChar.list.filter(item=> !item.acquired && !otherAcquired.has(itemKey(item)));
+
+  metaEl.textContent = `「${payload.n || '相手'}」と「${ownChar.name}」を比較：2人とも未取得 ${bothMissing.length} 件（全${ownChar.list.length}件中）`;
+
+  if(bothMissing.length===0){
+    listEl.innerHTML = `<div class="stat-empty">2人とも未取得の宝珠はありませんでした。</div>`;
+    return;
+  }
+
+  listEl.innerHTML = bothMissing.map(d=>`
+    <div class="compare-row">
+      <span class="badge" style="--badge-color:${ELEMENT_COLOR[d.chikara]||'var(--gold)'}">${escapeHtml(d.chikara)}</span>
+      <span class="name">${escapeHtml(d.name)}</span>
+      <span class="job">${escapeHtml((d.jobs&&d.jobs.length)?d.jobs.join(' / '):'-')}</span>
+      ${d.weapon ? `<span class="job">武器種：${escapeHtml(d.weapon)}</span>` : ''}
+      <span class="effect">${escapeHtml(d.effect||'-')}</span>
+    </div>
+  `).join('');
+});
+
+(async function init(){
+  await loadState();
+  buildJobOptions();
+  buildWeaponOptions();
+  render();
+})();
+</script>
+</body>
+</html>
