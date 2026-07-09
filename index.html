@@ -296,7 +296,7 @@
     border-color:transparent;
   }
 
-  #pageJobStats, #pageWeaponStats, #pageShare{display:none;}
+  #pageJobStats, #pageWeaponStats, #pageShare, #pageManual{display:none;}
   .stats-page-title{
     font-family:'Shippori Mincho', serif;
     color:var(--gold-bright);
@@ -408,6 +408,34 @@
   .compare-row .name{font-weight:700;color:var(--gold-bright);}
   .compare-row .job{color:#c7cdef;font-size:.76rem;}
   .compare-row .effect{color:#d8ddf5;font-size:.78rem;width:100%;}
+
+  /* 使い方（マニュアル）ページ */
+  .manual-section{
+    background:var(--panel);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:12px;
+    padding:16px 20px;
+    margin-bottom:16px;
+  }
+  .manual-section-title{
+    font-family:'Shippori Mincho', serif;
+    color:var(--gold-bright);
+    font-size:1rem;
+    margin:0 0 10px;
+  }
+  .manual-list{
+    margin:0;
+    padding-left:1.2em;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .manual-list li{
+    font-size:.84rem;
+    line-height:1.6;
+    color:#d8ddf5;
+  }
+  .manual-list strong{color:var(--cream);}
 </style>
 </head>
 <body>
@@ -433,6 +461,7 @@
   </header>
 
   <nav class="page-nav" id="pageNav">
+    <button class="page-nav-btn" data-page="manual">使い方</button>
     <button class="page-nav-btn active" data-page="main">宝珠一覧</button>
     <button class="page-nav-btn" data-page="jobStats">職業別の取得状況</button>
     <button class="page-nav-btn" data-page="weaponStats">武器種別の取得状況</button>
@@ -524,6 +553,63 @@
       </div>
       <div id="compareResultMeta" class="stats-page-note"></div>
       <div id="compareResultList" class="stats-chart compare-list"></div>
+    </div>
+  </div>
+
+  <div id="pageManual" class="stats-page">
+    <h2 class="stats-page-title">使い方</h2>
+    <p class="stats-page-note">このサイトは、ドラゴンクエストXの「宝珠」の取得状況を、キャラクターごとに管理するためのツールです。データはお使いのブラウザに保存され、他の人と共有・比較することもできます。</p>
+
+    <div class="manual-section">
+      <h3 class="manual-section-title">① 宝珠一覧の見方・使い方</h3>
+      <ul class="manual-list">
+        <li><strong>属性タブ（炎・水・風・光・闇）</strong>：タブを押すと、その属性の宝珠だけに絞り込めます。タブの下のバーで、その属性の取得率も確認できます。</li>
+        <li><strong>職業・武器種・状況・キーワード検索</strong>：一覧上部の絞り込み欄で、職業／武器種／取得状況（すべて・取得済みのみ・未取得のみ）／宝珠名や効果のキーワードで絞り込めます。</li>
+        <li><strong>取得チェック</strong>：行のどこか（武器種の文字表示部分を含む）をタップ・クリックすると、その宝珠の取得済み／未取得が切り替わります。チェックボックス自体を操作しても同じです。</li>
+        <li><strong>表示中を全て取得済みに／未取得に</strong>：現在の絞り込み条件に合っている宝珠だけを、まとめて取得済み・未取得に切り替えられます。</li>
+        <li><strong>公式データを再読み込み</strong>：現在選んでいるキャラクターの宝珠データを、公式の一覧で上書きします。取得チェックはリセットされるのでご注意ください。</li>
+      </ul>
+    </div>
+
+    <div class="manual-section">
+      <h3 class="manual-section-title">② キャラクターの管理</h3>
+      <ul class="manual-list">
+        <li>画面上部の「キャラクター」欄で、管理するキャラクターを切り替えられます。</li>
+        <li><strong>＋ 新規キャラ</strong>：新しいキャラクターを追加します。公式の宝珠一覧が全件未取得の状態から始まります。</li>
+        <li><strong>名前変更</strong>：選択中のキャラクターの名前を変更します。</li>
+        <li><strong>削除</strong>：選択中のキャラクターを削除します（最後の1人は削除できません）。</li>
+      </ul>
+    </div>
+
+    <div class="manual-section">
+      <h3 class="manual-section-title">③ 職業別／武器種別の取得状況</h3>
+      <ul class="manual-list">
+        <li>上部ナビゲーションの「職業別の取得状況」「武器種別の取得状況」から、それぞれの切り口で取得率をグラフ（横棒）で確認できます。</li>
+        <li>複数職業が対象の宝珠は、対象となる職業すべてのカウントに含まれます。</li>
+        <li>武器種が設定されていない宝珠は「（未設定）」としてまとめて集計されます。</li>
+        <li>表示される内容は、現在選択中のキャラクターのものです。</li>
+      </ul>
+    </div>
+
+    <div class="manual-section">
+      <h3 class="manual-section-title">④ 共有・比較の使い方</h3>
+      <ul class="manual-list">
+        <li>上部ナビゲーションの「共有・比較」ページを開きます。</li>
+        <li><strong>共有コードを作成する</strong>：自分のキャラクターを選んで「コードを作成」を押すと、そのキャラクターの取得状況を表す文字列が作成されます。「コピーする」でクリップボードにコピーし、LINEやDiscordなどで相手に送れます。</li>
+        <li><strong>相手のコードと比較する</strong>：受け取ったコードを貼り付け、比較したい自分のキャラクターを選んで「比較する」を押すと、<strong>2人とも未取得の宝珠</strong>だけが一覧表示されます。周回・交換の相談などにご活用ください。</li>
+        <li>この共有コードは簡易的な符号化であり、パスワードのような強固な暗号化ではありません。中身を完全に隠すものではない点にご注意ください。</li>
+      </ul>
+    </div>
+
+    <div class="manual-section">
+      <h3 class="manual-section-title">⑤ データの保存について</h3>
+      <ul class="manual-list">
+        <li>キャラクターの情報や取得状況は、お使いのブラウザ（localStorage）に保存されます。サーバーには送信されません。</li>
+        <li>保存先はブラウザ・端末ごとです。別のブラウザや別の端末を使う場合は、データは共有されません。端末をまたいで使いたい場合は「共有・比較」ページの共有コードをご活用ください（現状は取得済み情報のみの共有です）。</li>
+        <li>プライベートブラウジング（シークレットモード）では保存が効かない場合があります。その場合は画面下に注意メッセージが表示されます。</li>
+        <li>ブラウザのキャッシュ・サイトデータを削除すると、保存内容も消えてしまいます。大事な記録は「共有・比較」ページのコード作成機能などで、こまめに控えておくことをおすすめします。</li>
+        <li>iPhoneでご利用の場合、ファイルアプリの「クイックルック（プレビュー）」から開くと保存が安定しないことがあります。Safariで開いてから「ホーム画面に追加」しておくと、同じ場所から安定して開けます。</li>
+      </ul>
     </div>
   </div>
 
@@ -786,6 +872,7 @@ function showPage(page){
   document.getElementById('pageJobStats').style.display = (page==='jobStats') ? 'block' : 'none';
   document.getElementById('pageWeaponStats').style.display = (page==='weaponStats') ? 'block' : 'none';
   document.getElementById('pageShare').style.display = (page==='share') ? 'block' : 'none';
+  document.getElementById('pageManual').style.display = (page==='manual') ? 'block' : 'none';
   document.querySelectorAll('.page-nav-btn').forEach(btn=>{
     btn.classList.toggle('active', btn.dataset.page===page);
   });
