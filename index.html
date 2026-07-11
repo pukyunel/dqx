@@ -534,7 +534,7 @@
 
     <div class="share-section">
       <h3 class="share-section-title">① 共有コードを作成する</h3>
-      <p class="stats-page-note">選んだキャラクターの取得状況を、他の人と共有できる文字列（簡易的な符号化コードで、強固な暗号化ではありません）に変換します。</p>
+      <p class="stats-page-note">選んだキャラクターの取得状況を、他の人と共有できる短い文字列（簡易的な符号化コードで、強固な暗号化ではありません）に変換します。取得数に関わらず長さはほぼ一定（130文字前後）なので、Discordなどにも貼りやすくなっています。</p>
       <div class="share-row">
         <select id="shareCharSelect"></select>
         <button class="btn btn-gold btn-small" id="btnGenerateShareCode">コードを作成</button>
@@ -597,6 +597,7 @@
         <li>上部ナビゲーションの「共有・比較」ページを開きます。</li>
         <li><strong>共有コードを作成する</strong>：自分のキャラクターを選んで「コードを作成」を押すと、そのキャラクターの取得状況を表す文字列が作成されます。「コピーする」でクリップボードにコピーし、LINEやDiscordなどで相手に送れます。</li>
         <li><strong>相手のコードと比較する</strong>：受け取ったコードを貼り付け、比較したい自分のキャラクターを選んで「比較する」を押すと、<strong>2人とも未取得の宝珠</strong>だけが一覧表示されます。周回・交換の相談などにご活用ください。</li>
+        <li>共有コードは、取得済み宝珠を1件ずつ書き出すのではなく、公式データの並び順に対する○×のビット列として符号化しているため、取得数に関わらず長さがほぼ一定（130文字前後）で、Discordなどにも貼りやすくなっています。</li>
         <li>この共有コードは簡易的な符号化であり、パスワードのような強固な暗号化ではありません。中身を完全に隠すものではない点にご注意ください。</li>
       </ul>
     </div>
@@ -1046,7 +1047,8 @@ document.getElementById('btnReloadOfficial').addEventListener('click', async ()=
 });
 
 // ---- 共有コードの作成・比較 ----
-const SHARE_CODE_PREFIX = 'DQXHOJU1:';
+const SHARE_CODE_PREFIX_V1 = 'DQXHOJU1:'; // 旧形式（宝珠名を列挙する方式）読み込み対応のため残す
+const SHARE_CODE_PREFIX = 'DQXHOJU2:';    // 新形式（ビット列方式・短い）
 const SHARE_XOR_KEY = 'dqx-houju-share-v1'; // 簡易的な符号化用の固定キー（強固な暗号ではありません）
 
 function itemKey(item){
@@ -1062,48 +1064,110 @@ function xorBytes(bytes, keyStr){
   return out;
 }
 
-function encodeShareCode(character){
-  const acquiredKeys = character.list.filter(x=>x.acquired).map(itemKey);
-  const payload = {v:1, n: character.name, a: acquiredKeys};
-  const json = JSON.stringify(payload);
-  const bytes = new TextEncoder().encode(json);
-  const xored = xorBytes(bytes, SHARE_XOR_KEY);
+function bytesToBase64(bytes){
   let binary = '';
-  xored.forEach(b=>{ binary += String.fromCharCode(b); });
-  return SHARE_CODE_PREFIX + btoa(binary);
+  bytes.forEach(b=>{ binary += String.fromCharCode(b); });
+  return btoa(binary);
+}
+function base64ToBytes(b64){
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+// 全キャラ共通の宝珠順（公式データの並び順）でビットを立てる。並び順が同じ端末同士なら
+// 宝珠名を1件ずつ書き出すより圧倒的に短くなる。
+function packAcquiredBits(character){
+  const officialKeys = OFFICIAL_HOUJU_DATA.map(itemKey);
+  const acquiredSet = new Set(character.list.filter(x=>x.acquired).map(itemKey));
+  const byteLen = Math.ceil(officialKeys.length / 8);
+  const bits = new Uint8Array(byteLen);
+  officialKeys.forEach((k, i)=>{
+    if(acquiredSet.has(k)) bits[i >> 3] |= (1 << (i % 8));
+  });
+  return bits;
+}
+
+function unpackAcquiredBits(bits){
+  const officialKeys = OFFICIAL_HOUJU_DATA.map(itemKey);
+  const acquired = [];
+  officialKeys.forEach((k, i)=>{
+    if(bits[i >> 3] !== undefined && (bits[i >> 3] & (1 << (i % 8)))) acquired.push(k);
+  });
+  return acquired;
+}
+
+function encodeShareCode(character){
+  const nameBytes = new TextEncoder().encode(character.name || '');
+  const nameLen = Math.min(nameBytes.length, 255);
+  const bitBytes = packAcquiredBits(character);
+
+  const combined = new Uint8Array(2 + nameLen + bitBytes.length);
+  combined[0] = 2; // フォーマットバージョン
+  combined[1] = nameLen;
+  combined.set(nameBytes.slice(0, nameLen), 2);
+  combined.set(bitBytes, 2 + nameLen);
+
+  const xored = xorBytes(combined, SHARE_XOR_KEY);
+  return SHARE_CODE_PREFIX + bytesToBase64(xored);
 }
 
 function decodeShareCode(code){
   const trimmed = (code||'').trim();
-  if(!trimmed.startsWith(SHARE_CODE_PREFIX)){
-    throw new Error('コードの形式が正しくありません（先頭の文字列が一致しません）');
+
+  if(trimmed.startsWith(SHARE_CODE_PREFIX)){
+    const b64 = trimmed.slice(SHARE_CODE_PREFIX.length).trim();
+    let bytes;
+    try{
+      bytes = base64ToBytes(b64);
+    }catch(e){
+      throw new Error('コードを読み込めませんでした。コピーし忘れや余分な文字がないか確認してください。');
+    }
+    const combined = xorBytes(bytes, SHARE_XOR_KEY);
+    if(combined.length < 2){
+      throw new Error('コードの内容が正しくありません。');
+    }
+    const nameLen = combined[1];
+    const nameBytes = combined.slice(2, 2 + nameLen);
+    const bitBytes = combined.slice(2 + nameLen);
+    let name = '';
+    try{
+      name = new TextDecoder().decode(nameBytes);
+    }catch(e){ /* 名前が読めなくても比較自体はできるので続行 */ }
+    const acquired = unpackAcquiredBits(bitBytes);
+    return {v:2, n:name, a:acquired};
   }
-  const b64 = trimmed.slice(SHARE_CODE_PREFIX.length).trim();
-  let binary;
-  try{
-    binary = atob(b64);
-  }catch(e){
-    throw new Error('コードを読み込めませんでした。コピーし忘れや余分な文字がないか確認してください。');
+
+  if(trimmed.startsWith(SHARE_CODE_PREFIX_V1)){
+    // 旧形式（宝珠名を列挙するJSON方式）
+    const b64 = trimmed.slice(SHARE_CODE_PREFIX_V1.length).trim();
+    let bytes;
+    try{
+      bytes = base64ToBytes(b64);
+    }catch(e){
+      throw new Error('コードを読み込めませんでした。コピーし忘れや余分な文字がないか確認してください。');
+    }
+    const xored = xorBytes(bytes, SHARE_XOR_KEY);
+    let json;
+    try{
+      json = new TextDecoder().decode(xored);
+    }catch(e){
+      throw new Error('コードの内容を読み取れませんでした。');
+    }
+    let payload;
+    try{
+      payload = JSON.parse(json);
+    }catch(e){
+      throw new Error('コードの内容が壊れています。');
+    }
+    if(!payload || !Array.isArray(payload.a)){
+      throw new Error('コードの内容が正しくありません。');
+    }
+    return payload;
   }
-  const bytes = new Uint8Array(binary.length);
-  for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
-  const xored = xorBytes(bytes, SHARE_XOR_KEY);
-  let json;
-  try{
-    json = new TextDecoder().decode(xored);
-  }catch(e){
-    throw new Error('コードの内容を読み取れませんでした。');
-  }
-  let payload;
-  try{
-    payload = JSON.parse(json);
-  }catch(e){
-    throw new Error('コードの内容が壊れています。');
-  }
-  if(!payload || !Array.isArray(payload.a)){
-    throw new Error('コードの内容が正しくありません。');
-  }
-  return payload;
+
+  throw new Error('コードの形式が正しくありません（先頭の文字列が一致しません）');
 }
 
 function buildShareCharSelects(){
